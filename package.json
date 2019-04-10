@@ -1,0 +1,17 @@
+{
+  "name": "assassinsite",
+  "version": "1.0.0",
+  "description": "Senior Assassin Website",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "forever": "^1.0.0",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Karle",
+  "license": "ISC"
+}
