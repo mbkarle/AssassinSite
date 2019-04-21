@@ -4,6 +4,7 @@
   "description": "Senior Assassin Website",
   "main": "app.js",
   "dependencies": {
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "forever": "^1.0.0",
     "mongodb": "^3.2.3",

@@ -3,9 +3,16 @@ const express = require('express');
 const path = require('path');
 const MongoClient = require('mongodb').MongoClient;
 const env = require("./environment.json");
+const bodyParser = require("body-parser");
 
 /*----------Serve webpage----------*/
 var app = express();
+
+//parse request bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(express.json());
+app.use(express.urlencoded());
 
 // Serve up all html
 app.use(express.static('public'))

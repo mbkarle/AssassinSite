@@ -2,8 +2,33 @@
 <html>
   <head>
       <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.10.0/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/5.10.0/firebase-auth.js"></script>
+        <script src="main.js"></script>
+        <script src="login.js"></script>
+      <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
+      <link type="text/css" rel="stylesheet" href="main.css"/>
     </head>
   <body>
-      <div id="textSection">Hello World</div>
+
+    <div class='header'>
+        <img src='SimpleLogo.png' id='logo'> 
+        Assassin
+        <div id='signUpContainer' class="ui-container">
+            <div class='loggedOut'>
+                <input id='user-field' placeholder='Username' type='text'>
+                <input id='pass-field' placeholder='Password' type='password'>
+                <button id="signUp">Sign Up</button>
+                <button id="signIn">Sign In</button>
+            </div>
+            <div class='loggedIn'>
+                <button id="logOut">Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div id='main' class='loggedIn'></div>
+        
     </body>
 </html>
