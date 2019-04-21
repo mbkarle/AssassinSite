@@ -15,10 +15,8 @@
     <div class='header'>
         <img src='SimpleLogo.png' id='logo'> 
         Assassin
-        <div id='signUpContainer' class="ui-container">
+        <div id='buttonContainer' class="ui-container">
             <div class='loggedOut'>
-                <input id='user-field' placeholder='Username' type='text'>
-                <input id='pass-field' placeholder='Password' type='password'>
                 <button id="signUp">Sign Up</button>
                 <button id="signIn">Sign In</button>
             </div>
@@ -27,7 +25,16 @@
             </div>
         </div>
     </div>
-
+    <div id='login-modal' class='modal'>
+        <div class='modal-content'>
+            <span class='close'>&times;</span>
+            <h1>Sign Up</h1>
+            <input id='email-field' placeholder='Email' type='text'>
+            <input id='password-field' placeholder='Password' type='password'>
+            <button id='submit'>Sign Up</button>
+        </div>
+            
+    </div>
     <div id='main' class='loggedIn'></div>
         
     </body>

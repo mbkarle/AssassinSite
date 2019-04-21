@@ -15,6 +15,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     if(user){
         //User is logged in
         console.log("logged in!"); 
+        $("#login-modal").fadeOut(500);
         $(".loggedOut").hide();
         $(".loggedIn").show();
         get("/users", {_id: user.uid}, function(data){
@@ -39,31 +40,45 @@ function initializeDOM(){
 
    /*----------Sign Up----------*/ 
     $("#signUp").on('click', function(){
-        loginClick(this, signUp)
+        loginClick(signUp);
+        $("#login-modal h1, #submit").html("Sign Up");
     });
 
    /*----------Sign In----------*/ 
     $("#signIn").on('click', function(){
-        loginClick(this, signIn)
+        loginClick(signIn)
+        $('#login-modal h1, #submit').html("Sign In");
     });
 
     $('#logOut').on('click', function(){
         logOut();
     });
+
+   /*----------Modal Listeners----------*/ 
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+       if (event.target == $("#login-modal")[0]) {
+           $('.modal').fadeOut(500);
+        }
+    }
+
+    //clicking close closes modal
+    $(".close").on('click', function(){
+        $('.modal').fadeOut(500);
+    });
         
 }
 window.onload = initializeDOM;
 
-function loginClick(selector, loginFunc){
-    $("#signUpContainer .loggedOut button").not(selector).hide(500);
-    $("input").fadeIn(500);
-    $("#pass-field").keypress(function(e){
+function loginClick(loginFunc){
+    $('.modal').fadeIn(500);
+    $("#password-field").off('keypress').keypress(function(e){
         if(e.keyCode == 13)
-            loginFunc($("#user-field")[0].value, $("#pass-field")[0].value);
+            loginFunc($("#email-field")[0].value, $("#password-field")[0].value);
     })
-    $(selector).off('click').on('click', function(){
-        var email = $('#user-field')[0].value;
-        var password = $('#pass-field')[0].value;
+    $("#submit").off('click').on('click', function(){
+        var email = $('#email-field')[0].value;
+        var password = $('#password-field')[0].value;
         loginFunc(email, password);
     });
 }

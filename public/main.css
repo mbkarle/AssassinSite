@@ -17,8 +17,15 @@
     top: 5px;
 }
 
-#signUpContainer {
+#buttonContainer {
     float: right;
+    position: relative;
+    right: 10px;
+    bottom: 10px;
+}
+
+#buttonContainer button {
+    display: inline;
 }
 
 .loggedOut {
@@ -29,3 +36,83 @@
     display:none;
 }
 
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-content input {
+    margin: 0 auto;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    padding: 15px;
+    outline: none;
+    width: 80%;
+    margin-bottom: 20px;
+    transition: 0.3s;
+    -webkit-transition: 0.3s;
+    -moz-transition: 0.3s;
+}
+
+.modal-content input:focus {
+    border: 1px solid #777;
+}
+
+button {
+    background: #5d8ffc;
+    color: #fff;
+    border: 1px solid #5d8ffc;
+    border-radius: 5px;
+    padding: 15px;
+    display: block;
+    transition: 0.3s;
+    -webkit-transition: 0.3s;
+    -moz-transition: 0.3s;
+}
+
+.modal-content button {
+    width: 80%;
+    margin: 0 auto;
+}
+
+button:hover {
+    background: #fff;
+    color: #5d8ffc;
+    border: 1px solid #5d8ffc;
+    cursor: pointer;
+}

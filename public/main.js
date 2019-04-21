@@ -8,7 +8,6 @@ function get(route, query,  callback){
     }
         
    $.get(route, function(data){
-       console.log("calling back"); 
        callback(data);
    }); 
 
