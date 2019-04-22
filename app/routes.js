@@ -20,8 +20,8 @@ module.exports = function(db, app) {
         })
 
         .post(function(req, res){
-            var user = {_id: req.body._id, email: req.body.email};
-            db.collection("userlist").insertOne(user, function(err, result){
+            console.log("Req body: " + req.body);
+            db.collection("userlist").insertOne(req.body, function(err, result){
                 if(err) throw err;
                 console.log(result);
             });

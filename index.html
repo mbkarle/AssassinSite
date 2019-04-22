@@ -26,12 +26,23 @@
         </div>
     </div>
     <div id='login-modal' class='modal'>
-        <div class='modal-content'>
+        <div id='login-content' class='modal-content'>
             <span class='close'>&times;</span>
             <h1>Sign Up</h1>
             <input id='email-field' placeholder='Email' type='text'>
             <input id='password-field' placeholder='Password' type='password'>
+            <input id='first-name' class='signUps' placeholder='First Name' type='text'>
+            <input id='last-name' class='signUps' placeholder='Last Name' type='text'>
             <button id='submit'>Sign Up</button>
+            <a id='reset-pass' class='signIns'>Reset Password</a>
+        </div>
+
+        <div id='reset-content' class='modal-content' style='display:none;'>
+            <span class='close'>&times;</span>
+            <h1>Reset Password</h1>
+            <input id='recovery-email' placeholder='Email' type='text'>
+            <button id='resetButton'>Send Reset Email</button>
+            <p id='resMess' style='display:none;'></p>
         </div>
             
     </div>

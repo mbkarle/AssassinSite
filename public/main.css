@@ -116,3 +116,23 @@ button:hover {
     border: 1px solid #5d8ffc;
     cursor: pointer;
 }
+
+.modal-content a {
+    color: #5d8ffc;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: helvetica;
+    margin: 10px auto;
+    text-align: center;
+    display: block;
+    width: 50%;
+    cursor: pointer;
+}
+
+.modal-content a:hover {
+    color: #2d65de;
+}
+
+.modal-content a:active{
+    color: black;
+}
