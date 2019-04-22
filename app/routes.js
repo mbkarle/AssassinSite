@@ -14,7 +14,7 @@ module.exports = function(db, app) {
             console.log(query);
             db.collection("userlist").find(query).toArray(function(err, result){
                 if(err) throw err;
-                console.log(result);
+                console.log('Res: ' + result);
                 res.json(result);
             });
         })

@@ -20,7 +20,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         $(".loggedIn").show();
         get("/users", {_id: user.uid}, function(data){
             var u = data[0];
-            $("#main").html(
+            $("#userMain").html(
                 "<h1>Welcome User</h1><br>"+
                 "<p>"+u.firstName+" " + u.lastName + "</p><br>"
             );
