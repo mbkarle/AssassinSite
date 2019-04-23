@@ -20,7 +20,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         $(".loggedIn").show();
         get("/users", {_id: user.uid}, function(data){
             var u = data[0];
-            $("#userMain").html(
+            $("#content-pane").html(
                 "<h1>Welcome User</h1><br>"+
                 "<p>"+u.firstName+" " + u.lastName + "</p><br>"
             );
@@ -36,6 +36,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 /*----------DOM Listeners----------*/
 function initializeDOM(){
+    initializeListeners(); //main listeners initialize
     $("#signUpContainer button").show();
 
    /*----------Sign Up----------*/ 
@@ -64,6 +65,9 @@ function initializeDOM(){
        if (event.target == $("#login-modal")[0]) {
            closeModal();
         }
+       if (event.target == $("#main-modal")[0]){
+           closeMainModal();
+       }
     }
 
     //clicking close closes modal
@@ -121,6 +125,7 @@ function closeModal(){
     $('.modal').fadeOut(500, function(){
         $('#login-content').show();
         $('#reset-content').hide();
+        $('#mmc-wrapper').html("");
     });
 }
 

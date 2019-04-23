@@ -1,7 +1,7 @@
-body{
+/*---------Whole page---------*/
+html, body{
     height: 100%;
     width: 100%;
-
     margin: 0;
     padding: 0;
 }
@@ -10,9 +10,10 @@ body{
     display: none;
 }
 
+/*---------Header---------*/
 .header {
     width: 100%;
-    height: 20%;
+    height: 10%;
     background: rgb(95, 95, 95);
     color: rgb(240, 240, 240);
     font-size: 56px;
@@ -145,15 +146,11 @@ button:hover {
     color: black;
 }
 
-.main {
-    width: 100%;
-    height: 80%;
-}
-
+/*---------Intro Header---------*/
 .intro {
     width: 100%;
     background: #f6f8fa;
-    height: 40%;
+    height: 15%;
     padding: 15px;
 }
 
@@ -168,3 +165,137 @@ button:hover {
     margin: 0 auto;
     text-align: center;
 }
+
+/*---------Main---------*/
+.main {
+    display: -webkit-flex; /* Safari */
+    display: flex;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    width: 100%;
+    height: 90%;
+}
+
+/*---------Footer---------*/
+.footer {
+    width: 100%;
+    background: rgb(95, 95, 95);
+    color: white;
+    position: absolute;
+    bottom: 0;
+    height: 30px;
+}
+
+.footer-content {
+    margin: 5px auto;
+    width: 20%;
+    text-align: center;
+}
+
+/*---------Nav Col---------*/
+#navCol {
+    flex: 1;
+    border-style: none solid none none;
+    border-width: 1px;
+    border-color: rgb(95, 95, 95);
+    max-width: 330px;
+    height: 100%;
+    overflow-y: scroll;
+}
+
+#navCol .content-container {
+    padding: 24px;
+}
+
+#navCol .search, .navTool {
+    width: 95%;
+    border-style: solid;
+    outline: none;
+    border-color: rgb(209, 213, 218);
+    border-width: 1px;
+    box-shadow: inset 0 1px 2px rgba(27, 31, 35, .075);
+    font-size: 14px;
+    font-stretch: 100%;
+    line-height: 20px;
+    margin-bottom: 16px;
+    padding: 6px 8px;
+    border-radius: 10px;
+}
+
+#navCol .search {
+    cursor: text;
+}
+
+#navCol .search:focus {
+    border-color: rgb(33, 136, 255);
+}
+
+.nav-title {
+    font-size: 18px;
+    font-weight: 700;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.nav-title button {
+    padding: 3px 10px 3px 10px;
+    float: right;
+    position: relative;
+    left: 5px;
+}
+
+.toolTitle {
+    font-size: 18px;
+    font-weight: 600;
+    width: 100%;
+}
+
+.toolContent {
+    padding: 15px 5px;
+    margin-left: 20px;
+}
+
+.toolItem {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.toolItem:hover {
+    color: #1860fb;
+}
+
+#userInfo {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+#userInfo img {
+    max-height: 24px;
+    max-width: 24px;
+}
+
+#userInfo img, #userInfo div {
+    flex: 1;
+}
+
+.active {
+    color: #1860fb;
+}
+
+/*---------Content Pane---------*/
+#content-pane {
+    flex: 1;
+    background: #f6f8fa;
+    height: 100%;
+    width: 50%;
+    padding: 30px;
+    overflow-y: scroll;
+}
+
+#content-pane h1 {
+    margin-top: 0;
+}
+
+
