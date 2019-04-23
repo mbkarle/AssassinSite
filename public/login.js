@@ -36,6 +36,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 /*----------DOM Listeners----------*/
 function initializeDOM(){
+    initializeListeners(); //main listeners initialize
     $("#signUpContainer button").show();
 
    /*----------Sign Up----------*/ 
@@ -64,6 +65,9 @@ function initializeDOM(){
        if (event.target == $("#login-modal")[0]) {
            closeModal();
         }
+       if (event.target == $("#main-modal")[0]){
+           closeMainModal();
+       }
     }
 
     //clicking close closes modal
@@ -121,6 +125,7 @@ function closeModal(){
     $('.modal').fadeOut(500, function(){
         $('#login-content').show();
         $('#reset-content').hide();
+        $('#mmc-wrapper').html("");
     });
 }
 
