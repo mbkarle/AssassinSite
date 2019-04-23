@@ -53,7 +53,30 @@
         </div>
         <div class='content'></div>
     </div>
-    <div id='userMain' class='loggedIn main'></div>
+    <div id='userMain' class='loggedIn main'>
+        <div id='navCol'>
+            <div class='content-container'>
+                <h2 class='nav-title'>Games
+                    <button class='createGame'>Create</button>
+                </h2>
+                <input type='text' class='search' placeholder='Search games...'>
+                <div class='navTool' id='gamesCreated'>
+                    <div class='toolTitle'> Games you've created</div>
+                    <hr>
+                    <div class='toolContent'>You haven't created any games yet!</div>
+                </div>
+                <div class='navTool' id='gamesPlaying'>
+                    <div class='toolTitle'>Games you're playing</div>
+                    <hr>
+                    <div class='toolContent'>You aren't playing any games yet!</div>
+                </div>
+                <hr>
+                <div class='active toolItem' id='userInfo'><img src='gear-icon.png'><div>User Info</div></div>
+            </div>
+        </div>
+        <div id='content-pane'></div>
+    </div>
         
+    <div class='footer'><div class='footer-content'>Created by Matt Karle</div></div>
     </body>
 </html>
