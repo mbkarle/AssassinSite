@@ -103,7 +103,7 @@ function initializeDOM(){
 window.onload = initializeDOM;
 
 function loginClick(loginFunc){
-    $('.modal').fadeIn(500);
+    $('#login-modal').fadeIn(500);
     function func(){
         var email = $("#email-field")[0].value;
         var pass = $("#password-field")[0].value;

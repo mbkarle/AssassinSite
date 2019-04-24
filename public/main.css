@@ -83,7 +83,7 @@ html, body{
     cursor: pointer;
 }
 
-.modal-content input {
+.modal-content input, textarea {
     margin: 0 auto;
     display: block;
     border: 1px solid #ccc;
@@ -98,7 +98,7 @@ html, body{
     -moz-transition: 0.3s;
 }
 
-.modal-content input:focus {
+.modal-content input:focus, textarea:focus{
     border: 1px solid #777;
 }
 
@@ -298,4 +298,22 @@ button:hover {
     margin-top: 0;
 }
 
+.modal-container {
+    width: 80%;
+    display: flex;
+    margin: 0 auto;
+}
 
+.contained-inp {
+    flex: 1;
+}
+
+.cont-label {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.tall-input {
+    height: 200px;
+    width: 80%;
+}
