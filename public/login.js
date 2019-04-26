@@ -19,6 +19,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         $(".loggedOut").hide();
         $(".loggedIn").show();
         loadUserData();
+        populateContentPane("User Info", user);
     }
     else{
         //User has been logged out
@@ -137,7 +138,8 @@ function signUp(email, password, firstName, lastName){
                 firstName: firstName,
                 lastName: lastName,
                 createdGames: {},
-                gamesPlaying: {}
+                gamesPlaying: {},
+                totalKills: 0
             }
             post("/users", userObj, function(data){
                 console.log("Created mongodb doc");  
