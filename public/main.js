@@ -86,3 +86,28 @@ function launchGameCreation(){
 function createGame(/*some parameters*/){
 
 }
+
+/*---Populate Content Pane*/
+function populateContentPane(type, user = undefined){ //add some stuff to the pane
+    switch(type){
+        case "User Info":
+            populateUserInfo(user);
+            break;
+        case "Game":
+            //do some other stuff
+            break;
+    }
+}
+
+//do some stuffs
+function populateUserInfo(user) {
+    get("/users", {_id: user.uid}, function(data){
+        var u = data[0];
+        console.log(data);
+        $("#content-pane").html(
+            "<h1>Welcome</h1><br>"+
+            "<h2>User: </h2>" + "<p>"+u.firstName+" " + u.lastName + "</p><br>" +
+            "<h2>Total Kills: </h2>" + "<p>"+ u.totalKills + "</p>"
+        );
+    })
+}
