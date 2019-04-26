@@ -129,6 +129,10 @@ function closeModal(){
     });
 }
 
+
+
+
+
 /*----------Firebase Functions----------*/
 function signUp(email, password, firstName, lastName){
     firebase.auth().createUserWithEmailAndPassword(email, password)
