@@ -254,3 +254,35 @@ function populateUserInfo(user) {
         );
     })
 }
+
+function createGameDiv(gameName, id){
+     return '<div class="toolItem" id="'+id+'">'+gameName+'</div>';
+}
+
+/*---Loading animation---*/
+function startLoading(){
+    $('#main-modal').show();
+    $('#main-modal-content').hide();
+    $('.loading').show();
+    var deg = 0;
+    return setInterval(function(){
+        deg += 10;
+        $('.loading').css({'transform':'rotate('+deg+'deg)'});
+    }, 100);
+}
+
+function stopLoading(timer){
+    clearInterval(timer);
+    $('#main-modal-content').show();
+    $('.loading').hide();
+}
+
+/*---------Search Functionality---------*/
+function showSearchResults(search){
+    get('/games', {name: {$regex: '(?i).*'+search+'.*'}}, function(data){
+        $('#content-pane').html('');
+        for(var res of data){
+            $('#content-pane').append('<div>'+res.name+'</div><br>');
+        }
+    });
+}

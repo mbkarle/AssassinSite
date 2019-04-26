@@ -20,6 +20,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         $(".loggedIn").show();
         loadUserData();
         populateContentPane("User Info", user);
+        loadUserData();
     }
     else{
         //User has been logged out
