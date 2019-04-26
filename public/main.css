@@ -146,6 +146,12 @@ button:hover {
     color: black;
 }
 
+.loading {
+    display: block;
+    width: 128px;
+    height: 128px;
+    margin: 200px auto;
+}
 /*---------Intro Header---------*/
 .intro {
     width: 100%;

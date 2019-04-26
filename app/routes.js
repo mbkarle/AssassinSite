@@ -2,7 +2,8 @@ module.exports = function(db, app) {
 
     app.route('/games')
         .get(function(req, res){
-            db.collection("games").find({}).toArray(function(err, result) {
+            var query = req.query || {};
+            db.collection("games").find(query).toArray(function(err, result) {
                 if(err) throw err;
                 res.json(result);
             });

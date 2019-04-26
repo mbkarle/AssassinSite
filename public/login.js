@@ -18,13 +18,7 @@ firebase.auth().onAuthStateChanged(function(user) {
         $("#login-modal").fadeOut(500);
         $(".loggedOut").hide();
         $(".loggedIn").show();
-        get("/users", {_id: user.uid}, function(data){
-            var u = data[0];
-            $("#content-pane").html(
-                "<h1>Welcome User</h1><br>"+
-                "<p>"+u.firstName+" " + u.lastName + "</p><br>"
-            );
-        })
+        loadUserData();
     }
     else{
         //User has been logged out
@@ -141,7 +135,9 @@ function signUp(email, password, firstName, lastName){
                 _id: u.uid,
                 email: u.email,
                 firstName: firstName,
-                lastName: lastName
+                lastName: lastName,
+                createdGames: {},
+                gamesPlaying: {}
             }
             post("/users", userObj, function(data){
                 console.log("Created mongodb doc");  
