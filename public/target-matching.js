@@ -25,6 +25,7 @@ function match(studentArray){
     matchedPairs.push([studentArray[studentArray.length - 1], studentArray[0]]);
 
     // console.log(matchedPairs.join('|'));
+    return matchedPairs;
 }
 
 // match(array);
