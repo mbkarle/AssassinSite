@@ -2,9 +2,19 @@ module.exports = function(db, app) {
 
     app.route('/games')
         .get(function(req, res){
-            db.collection("games").find({}).toArray(function(err, result) {
+            var query = req.query || {};
+            db.collection("games").find(query).toArray(function(err, result) {
                 if(err) throw err;
-                console.log(result); 
+                res.json(result);
+            });
+        })
+        .post(function(req, res){
+            var toInsert = req.body;
+            db.collection('games').insertOne(toInsert, function(err, result){
+                if(err) throw err;
+                console.log("ID: " + toInsert._id);
+                var response = {result: result, _id: toInsert._id};
+                res.json(response);
             });
         });
 
@@ -14,17 +24,25 @@ module.exports = function(db, app) {
             console.log(query);
             db.collection("userlist").find(query).toArray(function(err, result){
                 if(err) throw err;
-                console.log('Res: ' + result);
                 res.json(result);
             });
         })
 
         .post(function(req, res){
+            
             console.log("Req body: " + req.body);
-            db.collection("userlist").insertOne(req.body, function(err, result){
+            var toInsert = req.body;
+            db.collection("userlist").insertOne(toInsert, function(err, result){
                 if(err) throw err;
-                console.log(result);
+                res.json(result);
             });
+        })
+
+        .put(function(req, res){
+            var body = req.body;
+            db.collection('userlist').updateOne({_id: body.id}, {
+                $set: {[body.key]: body.value}
+            }, function(err, result){if(err) throw err;res.json(result);});
         });
         
 

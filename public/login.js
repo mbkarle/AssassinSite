@@ -18,13 +18,9 @@ firebase.auth().onAuthStateChanged(function(user) {
         $("#login-modal").fadeOut(500);
         $(".loggedOut").hide();
         $(".loggedIn").show();
-        get("/users", {_id: user.uid}, function(data){
-            var u = data[0];
-            $("#content-pane").html(
-                "<h1>Welcome User</h1><br>"+
-                "<p>"+u.firstName+" " + u.lastName + "</p><br>"
-            );
-        })
+        loadUserData();
+        populateContentPane("User Info", user);
+        loadUserData();
     }
     else{
         //User has been logged out
@@ -103,7 +99,7 @@ function initializeDOM(){
 window.onload = initializeDOM;
 
 function loginClick(loginFunc){
-    $('.modal').fadeIn(500);
+    $('#login-modal').fadeIn(500);
     function func(){
         var email = $("#email-field")[0].value;
         var pass = $("#password-field")[0].value;
@@ -129,6 +125,10 @@ function closeModal(){
     });
 }
 
+
+
+
+
 /*----------Firebase Functions----------*/
 function signUp(email, password, firstName, lastName){
     firebase.auth().createUserWithEmailAndPassword(email, password)
@@ -141,7 +141,10 @@ function signUp(email, password, firstName, lastName){
                 _id: u.uid,
                 email: u.email,
                 firstName: firstName,
-                lastName: lastName
+                lastName: lastName,
+                createdGames: {},
+                gamesPlaying: {},
+                totalKills: 0
             }
             post("/users", userObj, function(data){
                 console.log("Created mongodb doc");  

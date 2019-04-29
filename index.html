@@ -7,6 +7,7 @@
         <script src="https://www.gstatic.com/firebasejs/5.10.0/firebase-auth.js"></script>
         <script src="main.js"></script>
         <script src="login.js"></script>
+        <script src='target-matching.js'></script>
       <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
       <link type="text/css" rel="stylesheet" href="main.css"/>
     </head>
@@ -51,14 +52,63 @@
             <span class='close'>&times;</span>
             <div id='mmc-wrapper'></div>
         </div>
+        <img class='loading' src='gear-icon.png' style='display:none;'>
     </div>
     <div id='genMain' class='loggedOut main'>
-        <div class='intro'>
-            <h1>Create. Organize. Play</h1> 
-            <p>The Assassin Site easily eliminates the difficulties of organizing a game of assassin, whether it's across a student body or just among your friends.</p>
+
+
+        <div class='content'>
+
+            <div class='intro'>
+                <h1>Create. Organize. Play</h1>
+                <p>The Assassin Site easily eliminates the difficulties of organizing a game of assassin, whether it's across a student body or just among your friends.</p>
+            </div>
+
+            <style>
+            .flex-container {
+                display: flex;
+                flex-wrap: nowrap;
+                background-color: DodgerBlue;
+            }
+
+            .flex-container > div {
+                background-color: #f1f1f1;
+                width: 100%;
+                text-align: left;
+                line-height: 25px;
+                font-size: 20px;
+                flex:1;
+            }
+
+            .flex-center {
+                text-align: center;
+            }
+            </style>
+            <div class="flex-container">
+               <div>
+                   <h3 class="flex-center">What is Assassin?</h3>
+                   <br>Senior assassin is a fun end of the year tradition where seniors try to squirt each other with water guns.
+               </div>
+
+               <div>
+                   <h3 class="flex-center">Rules</h3>
+                   <br>These are the general rules. Rules may vary from game to game.
+                   <ol>
+                       <li>You use squirt guns or nerf guns</li>
+                       <li>You can't play at school </li>
+                   </ol>
+               </div>
+
+               <div>
+                   <h3 class="flex-center">Services</h3>
+                   We will organize your game for you and keep track of the targets and assassins. All you have to do is sign up and
+                   hit "create a new game".
+               </div>
+
+             </div>
         </div>
-        <div class='content'></div>
     </div>
+
     <div id='userMain' class='loggedIn main'>
         <div id='navCol'>
             <div class='content-container'>
@@ -69,20 +119,23 @@
                 <div class='navTool' id='gamesCreated'>
                     <div class='toolTitle'> Games you've created</div>
                     <hr>
-                    <div class='toolContent'>You haven't created any games yet!</div>
+                    <div id='yourCreations' class='toolContent'>You haven't created any games yet!</div>
                 </div>
                 <div class='navTool' id='gamesPlaying'>
                     <div class='toolTitle'>Games you're playing</div>
                     <hr>
-                    <div class='toolContent'>You aren't playing any games yet!</div>
+                    <div id='yourPlaying' class='toolContent'>You aren't playing any games yet!</div>
                 </div>
                 <hr>
                 <div class='active toolItem' id='userInfo'><img src='gear-icon.png'><div>User Info</div></div>
             </div>
         </div>
-        <div id='content-pane'></div>
+        <div id='content-pane'>
+            <h1 id="userName">Username</h1>
+        </div>
     </div>
         
-    <div class='footer'><div class='footer-content'>Created by Matt Karle</div></div>
+    <div class='footer'><div class='footer-content'>Created by <span style='text-decoration: underline;'>Matt Karle</span>, Timmy Kwan, Martin Ma, Evan Malkin, and Cory Puckett</div></div>
     </body>
+
 </html>
