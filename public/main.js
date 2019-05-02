@@ -6,6 +6,13 @@ function get(route, query,  callback){
 
 }
 
+function getUser(callback){
+    var id = firebase.auth().currentUser.uid;
+    get('/users', {_id: id}, function(data){
+        callback(data[0]);
+    });
+}
+
 function post(route, data, callback){
  //   $.post(route, data, callback, 'json');
     $.ajax({
@@ -41,20 +48,29 @@ function initializeListeners(){
     $('.search').on('input', function(){
         showSearchResults($(this).val());
     });
+
 }
 
 function loadUserData(){
     refreshNavCol();
 }
 
+function refreshToolListeners(){
+    $('.toolItem').on('click', function(){
+        activate($(this).attr('data-type'), $(this).attr('id'));
+    });
+}
+
+
 
 /*=================================*/ 
 /*---------Major Functions---------*/
 /*=================================*/ 
 
-function activate(divID){
+function activate(data_type, divID){
    $('.active').removeClass('active');
-   $('#divID').addClass('active');
+   $('#'+divID).addClass('active');
+   populateContentPane(data_type, divID);
 }
 
 /*---------Update Nav Column---------*/
@@ -69,7 +85,7 @@ function refreshNavCol(){
         }else{
             for(var idx in createdGames){
                 var game = createdGames[idx];
-                $('#yourCreations').append(createGameDiv(game.name, game._id));
+                $('#yourCreations').append(createGameDiv(game.name, "createdGames-"+idx));
             }
         }
         
@@ -80,10 +96,12 @@ function refreshNavCol(){
         else{
             for(var idx in gamesPlaying){
                 var game = gamesPlaying[idx];
-                $("#yourPlaying").append(createGameDiv(game.name, game._id));
+                $("#yourPlaying").append(createGameDiv(game.name, "gamesPlaying-"+idx));
             }
         }
+        refreshToolListeners();
     });
+
 }
 
 /*---Open and Populate Modal---*/
@@ -111,7 +129,7 @@ function openNewModal(items){
          count++;
      }
      if(count > 4){
-         $('#main-modal-content').css({'margin': '5% auto'});
+         $('#main-modal-content').css({'margin': '2% auto'});
      }
      else
          $('#main-modal-content').css({'margin': '15% auto'});
@@ -121,6 +139,24 @@ function openNewModal(items){
 function closeMainModal(){
     $("#main-modal").fadeOut(500, function(){
         $("#mmc-wrapper").html("");
+    });
+}
+
+/*---------Join Game---------*/
+function joinGame(id){
+    getUser(function(user){
+       var gameIndex = Object.keys(user.gamesPlaying).length;
+       put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user}, function(game){
+           game = game.value;
+           if(!('isModerator' in game))
+               game.isModerator = false;
+
+           put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
+               console.log(data);
+               refreshNavCol();
+           });
+
+       });
     });
 }
 
@@ -148,6 +184,11 @@ function launchGameCreation(){
             content: '<input id="startD" class="contained-inp" type="date"><input id="endD" class="contained-inp" type="date">'
         },
         {
+            type: 'input',
+            classes: ['locationInp'],
+            content: 'Game Location'
+        },
+        {
             type: 'textarea',
             classes: ['tall-input', 'gameDescription'],
             content: 'Description or unique rules'
@@ -168,18 +209,19 @@ function launchGameCreation(){
         var name = $('.gameNameInp').val();
         var startDate = $('#startD').val();
         var endDate = $('#endD').val();
+        var loc = $('.locationInp').val();
         var description = $('.gameDescription').val();
         var domain = $('.userRestrict').val();
-        createGame(name, startDate, endDate, description, domain);
+        createGame(name, startDate, endDate, loc, description, domain);
         closeMainModal();    
     });
 }
 
 /*---Create Game---*/
-function createGame(name, startDate, endDate, description, domain){
+function createGame(name, startDate, endDate, loc, description, domain){
     var loader = startLoading();
     var user = firebase.auth().currentUser.uid;
-    var game = {'name': name, 'start': startDate, 'end': endDate, 'description': description, 'domain': domain};
+    var game = {'name': name, 'start': startDate, 'end': endDate, 'location': loc, 'description': description, 'domain': domain, "hasStarted": false};
     post('/games', game, function(data){
         console.log('created game. data: ' + data);
         get('/users', {_id: user}, function(res){
@@ -188,6 +230,7 @@ function createGame(name, startDate, endDate, description, domain){
             game._id = data._id;
             game.isModerator = true;
             console.log(game);
+
             put('/users', {id: user, key: ("createdGames."+gameIdx), value: game}, function(d){
                 console.log('updated. data: ' + d);
                 stopLoading(loader);
@@ -198,8 +241,9 @@ function createGame(name, startDate, endDate, description, domain){
     
 }
 
+
 function createGameDiv(gameName, id){
-     return '<div class="toolItem" id="'+id+'">'+gameName+'</div>';
+     return '<div class="toolItem" data-type="Game" id="'+id+'">'+gameName+'</div>';
 }
 
 /*---Loading animation---*/
@@ -231,20 +275,20 @@ function showSearchResults(search){
 }
 
 /*---Populate Content Pane*/
-function populateContentPane(type, user = undefined){ //add some stuff to the pane
+function populateContentPane(type, id){ //add some stuff to the pane
     switch(type){
         case "User Info":
-            populateUserInfo(user);
+            populateUserInfo(id);
             break;
         case "Game":
-            //do some other stuff
+            populateGameInfo(id);     
             break;
     }
 }
 
 //do some stuffs
-function populateUserInfo(user) {
-    get("/users", {_id: user.uid}, function(data){
+function populateUserInfo(id) {
+    get("/users", {_id: id}, function(data){
         var u = data[0];
         console.log(data);
         $("#content-pane").html(
@@ -255,34 +299,19 @@ function populateUserInfo(user) {
     })
 }
 
-function createGameDiv(gameName, id){
-     return '<div class="toolItem" id="'+id+'">'+gameName+'</div>';
-}
-
-/*---Loading animation---*/
-function startLoading(){
-    $('#main-modal').show();
-    $('#main-modal-content').hide();
-    $('.loading').show();
-    var deg = 0;
-    return setInterval(function(){
-        deg += 10;
-        $('.loading').css({'transform':'rotate('+deg+'deg)'});
-    }, 100);
-}
-
-function stopLoading(timer){
-    clearInterval(timer);
-    $('#main-modal-content').show();
-    $('.loading').hide();
-}
-
-/*---------Search Functionality---------*/
-function showSearchResults(search){
-    get('/games', {name: {$regex: '(?i).*'+search+'.*'}}, function(data){
-        $('#content-pane').html('');
-        for(var res of data){
-            $('#content-pane').append('<div>'+res.name+'</div><br>');
-        }
+function populateGameInfo(id){
+    var uid = firebase.auth().currentUser.uid;
+    var gameID = id.split('-')[1];
+    get('/users', {_id: uid}, function(data){
+        var game = data[0][id.split('-')[0]][gameID];
+        $("#content-pane").load('gameContent.html', function(){
+            $('.gameName').html(game.name);
+            $('.location').html(game.location);
+            $('.description').html(game.description);
+        });
+        console.log('game info');
     });
 }
+
+
+

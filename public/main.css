@@ -272,19 +272,19 @@ button:hover {
     color: #1860fb;
 }
 
-#userInfo {
+.userInfo {
     display: flex;
     align-items: center;
     font-weight: 600;
     font-size: 18px;
 }
 
-#userInfo img {
+.userInfo img {
     max-height: 24px;
     max-width: 24px;
 }
 
-#userInfo img, #userInfo div {
+.userInfo img, .userInfo div {
     flex: 1;
 }
 
@@ -345,4 +345,30 @@ button:hover {
 
 .search-date{
     display: flex;
+}
+
+.flex-container {
+    display: flex;
+    flex-wrap: nowrap;
+    background: dodgerblue;
+    height: 100%;
+}
+
+.flex-container > div {
+    background-color: #f1f1f1;
+    height: 100%;
+    padding: 20px;
+    text-align: left;
+    line-height: 25px;
+    font-size: 20px;
+    flex:1;
+}
+
+.flex-container > div:nth-child(2){
+    border-style: none solid;
+    border-width: 2px;
+}
+
+.flex-center {
+   text-align: center;
 }
