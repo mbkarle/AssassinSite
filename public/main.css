@@ -13,10 +13,11 @@ html, body{
 /*---------Header---------*/
 .header {
     width: 100%;
-    height: 10%;
+    height: 75px;
     background: #002a32;
     color: #ff5e57;
     font-size: 56px;
+    /*position: static;*/
 }
 
 #logo {
@@ -158,7 +159,7 @@ button:hover {
 .intro {
     width: 100%;
     background: #212121;
-    height: 15%;
+    height: 105px;
     padding: 15px;
 }
 
@@ -178,8 +179,8 @@ button:hover {
 .main {
     display: -webkit-flex; /* Safari */
     display: flex;
-    overflow-y: hidden;
-    overflow-x: hidden;
+    /*overflow-y: hidden;*/
+    /*overflow-x: hidden;*/
     width: 100%;
     height: 90%;
 }
@@ -189,14 +190,14 @@ button:hover {
     width: 100%;
     background: #002a32;
     color: white;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     height: 30px;
 }
 
 .footer-content {
     margin: 5px auto;
-    width: 80%;
+    width: 90%;
     text-align: center;
 }
 
