@@ -4,6 +4,7 @@ html, body{
     width: 100%;
     margin: 0;
     padding: 0;
+    background: #acbece;
 }
 
 .ui-container input {
@@ -347,15 +348,17 @@ button:hover {
     display: flex;
 }
 
+/*---------------Flex-------------*/
+
 .flex-container {
     display: flex;
     flex-wrap: nowrap;
-    background: dodgerblue;
+    background: #acbece;
     height: 100%;
 }
 
 .flex-container > div {
-    background-color: #f1f1f1;
+    background-color: #acbece;
     height: 100%;
     padding: 20px;
     text-align: left;
