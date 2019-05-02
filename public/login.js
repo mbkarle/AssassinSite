@@ -18,9 +18,9 @@ firebase.auth().onAuthStateChanged(function(user) {
         $("#login-modal").fadeOut(500);
         $(".loggedOut").hide();
         $(".loggedIn").show();
+        $('.userInfo').attr('id', user.uid);
         loadUserData();
-        populateContentPane("User Info", user);
-        loadUserData();
+        populateContentPane("User Info", user.uid);
     }
     else{
         //User has been logged out

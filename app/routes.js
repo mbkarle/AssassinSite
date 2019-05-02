@@ -3,7 +3,9 @@ module.exports = function(db, app) {
     app.route('/games')
         .get(function(req, res){
             var query = req.query || {};
+            console.log('query: ' + query.strId);
             db.collection("games").find(query).toArray(function(err, result) {
+                console.log("result " + JSON.stringify(result));
                 if(err) throw err;
                 res.json(result);
             });
@@ -12,9 +14,18 @@ module.exports = function(db, app) {
             var toInsert = req.body;
             db.collection('games').insertOne(toInsert, function(err, result){
                 if(err) throw err;
-                console.log("ID: " + toInsert._id);
-                var response = {result: result, _id: toInsert._id};
-                res.json(response);
+                db.collection('games').updateOne({_id: toInsert._id}, {$set: {strId: toInsert._id.toString()}}, function(err, resp){
+                    if(err) throw err;
+                    console.log("ID: " + toInsert._id);
+                    var response = {result: result, _id: toInsert._id};
+                    res.json(response);
+                });
+            });
+        })
+        .put(function(req, res){
+            putFunc(db, 'games', req.body, function(result){
+                console.log("Games Result: " + JSON.stringify(result));
+                res.json(result);
             });
         });
 
@@ -40,11 +51,27 @@ module.exports = function(db, app) {
 
         .put(function(req, res){
             var body = req.body;
-            db.collection('userlist').updateOne({_id: body.id}, {
-                $set: {[body.key]: body.value}
-            }, function(err, result){if(err) throw err;res.json(result);});
+            putFunc(db, 'userlist', body, function(result){
+                res.json(result);
+            });
         });
         
 
 };
 
+function putFunc(db, collectionName, obj, success){
+    var operation = obj.op || "$set";
+    var filter;
+    if('filter' in obj)
+        filter = obj.filter;
+    else
+        filter = {_id: obj.id};
+    db.collection(collectionName).findOneAndUpdate(filter, {
+        [operation]: {[obj.key]: obj.value}
+    }, function(err, result){
+        if(err) throw err;
+        success(result);
+    });
+}
+
+//TODO: write middleware to process permissions
