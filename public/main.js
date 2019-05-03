@@ -365,7 +365,7 @@ function populateGameInfo(game){
                 $('.owner').html(game.owner);
                 $('.startDate').html(game.start);
                 $('.description').html(game.description);
-                if(!(game.strId in user.gamesPlaying)){
+                if(!(game._id in user.gamesPlaying)){
                     $('.joinButton').fadeIn(500, function(){
                         $('.joinButton').on('click', function(){
                             joinGameClick(game, userDomain);            
