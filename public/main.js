@@ -373,6 +373,9 @@ function populateGameInfo(game){
                         });
                     });
                 }
+                if(game.isModerator){
+                    $('.editButton').fadeIn(500);
+                }
         });
     });
 }
