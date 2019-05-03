@@ -313,5 +313,31 @@ function populateGameInfo(id){
     });
 }
 
+function startGame(id) {
+    get('/games',{strId: id},function(data){
+        console.log(data);
+        var game = data[0];
+        var playArr = game.players;
+        var playIds = [];
+        var targetArr = [];
+        console.log(playArr);
+        for(let i=0; i < playArr.length; i++){
+            playIds.push(playArr[i]._id);
+        }
+        console.log(playIds);
+        targetArr = match(playIds);
 
+        for(let i=0; i < playArr.length; i++){
+            for (let j = 0; j < targetArr.length; j++) {
+                if (playArr[i]._id === targetArr[j][0]){
+                    playArr[i].target = targetArr[j][1]
+                }
+            }
 
+        }
+
+        db.collection('games').update(game, {players:playArr}, {upsert:true})
+
+    });
+
+}
