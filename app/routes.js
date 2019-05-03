@@ -34,7 +34,9 @@ module.exports = function(db, app) {
             var query = req.query;
             console.log(query);
             db.collection("userlist").find(query).toArray(function(err, result){
+                result = processPermissions(query.current_user, result)
                 if(err) throw err;
+                console.log("Users Result: " + JSON.stringify(result));
                 res.json(result);
             });
         })
@@ -88,19 +90,14 @@ function putFunc(db, collectionName, obj, success){
 //TODO: write middleware to process permissions
 
 function processPermissions (firebaseuid, user_json) {
-    // Identify current user with google API and get email
-    // Compare that email with the email field from the query response
-    // If the emails are the same, set fieldsToOmit to "self" json object in the omissions.js
-    var omitted_fields = require('omissions');
+    var omitted_fields = require('./omissions.json');
     var fieldsToOmit;
     if (firebaseuid === user_json._id){
-        fieldsToOmit = omitted_fields[0];
+        fieldsToOmit = omitted_fields.Self;
     }
     else {
-        fieldsToOmit = omitted_fields[1];
+        fieldsToOmit = omitted_fields.User;
     }
     fieldsToOmit.forEach(field => delete user_json[field]);
     return user_json;
-
-
 }

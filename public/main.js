@@ -1,6 +1,7 @@
 /*---------Generic Helper Functions---------*/
 function get(route, query,  callback){
-   $.get(route, query, function(data){
+    query.current_user = firebase.auth().currentUser.uid;
+    $.get(route, query, function(data){
        callback(data);
    }); 
 
