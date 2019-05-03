@@ -32,8 +32,10 @@ module.exports = function(db, app) {
     app.route("/users")
         .get(function(req, res){
             var query = req.query;
-            console.log(query);
+            var curr_user = query.current_user;
+            delete query.current_user;
             db.collection("userlist").find(query).toArray(function(err, result){
+                console.log("Current User " + query.current_user);
                 result = processPermissions(query.current_user, result)
                 if(err) throw err;
                 console.log("Users Result: " + JSON.stringify(result));
@@ -98,6 +100,8 @@ function processPermissions (firebaseuid, user_json) {
     else {
         fieldsToOmit = omitted_fields.User;
     }
+    console.log("Before omissions: " + user_json);
     fieldsToOmit.forEach(field => delete user_json[field]);
+    console.log("After omissions: " + user_json);
     return user_json;
 }

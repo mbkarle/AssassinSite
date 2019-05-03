@@ -403,9 +403,10 @@ function startGame(id) {
 
         }
 
-        db.collection('games').update(game, {players:playArr}, {upsert:true})
+        //db.collection('games').update(game, {players:playArr}, {upsert:true})
 
     });
+}
 
 function joinGameClick(game, userDomain){
     var id = game._id;
@@ -438,4 +439,3 @@ function deleteUser(){
         }).catch(genCatch);
     });
 }
-
