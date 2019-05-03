@@ -40,6 +40,22 @@ function put(route, data, callback){
     });
 }
 
+function ajaxDelete(route, data, callback){
+    $.ajax({
+        url: route,
+        type: 'DELETE',
+        data: data,
+        success: callback
+    });
+}
+
+function genCatch(error){
+     // Handle Errors here.
+     var errorCode = error.code;
+     var errorMessage = error.message;
+     console.log(errorMessage);
+     alert(errorMessage);
+}
 /*---------Main Content DOM Listeners---------*/
 
 /*---Create Game Button ---*/
@@ -145,12 +161,13 @@ function closeMainModal(){
 /*---------Join Game---------*/
 function joinGame(id){
     getUser(function(user){
-       var gameIndex = Object.keys(user.gamesPlaying).length;
+       var gameIndex = id; //change!
        put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user}, function(game){
            game = game.value;
            if(!('isModerator' in game))
                game.isModerator = false;
 
+           
            put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
                console.log(data);
                refreshNavCol();
@@ -189,6 +206,11 @@ function launchGameCreation(){
             content: 'Game Location'
         },
         {
+            type: 'div',
+            classes: ['modal-container'],
+            content: '<input class="killInterval" placeholder="Kill interval? # of Days" type="number" min="1" max="365">'
+        },
+        {
             type: 'textarea',
             classes: ['tall-input', 'gameDescription'],
             content: 'Description or unique rules'
@@ -197,6 +219,11 @@ function launchGameCreation(){
             type: 'input',
             classes:['userRestrict'],
             content: 'Regulate user domain? @example.com'
+        },
+        {
+            type: 'input',
+            classes: ['gamePass'],
+            content: 'Add game password?'
         },
         {
             type: 'button',
@@ -212,26 +239,29 @@ function launchGameCreation(){
         var loc = $('.locationInp').val();
         var description = $('.gameDescription').val();
         var domain = $('.userRestrict').val();
-        createGame(name, startDate, endDate, loc, description, domain);
-        closeMainModal();    
+        var password = $('.gamePass').val();
+        createGame(name, startDate, endDate, loc, description, domain, password);
+        closeMainModal();
     });
 }
 
 /*---Create Game---*/
-function createGame(name, startDate, endDate, loc, description, domain){
+function createGame(name, startDate, endDate, loc, description, domain, password){
     var loader = startLoading();
-    var user = firebase.auth().currentUser.uid;
-    var game = {'name': name, 'start': startDate, 'end': endDate, 'location': loc, 'description': description, 'domain': domain, "hasStarted": false};
-    post('/games', game, function(data){
-        console.log('created game. data: ' + data);
-        get('/users', {_id: user}, function(res){
-            var u = res[0];
-            var gameIdx = Object.keys(u.createdGames).length || 0;
-            game._id = data._id;
+    var game = {'name': name, 'start': startDate, 'end': endDate, 'location': loc, 'description': description, 'domain': domain, 'password': password, "hasStarted": false };
+    if(game.password.length == 0)
+        delete game.password;
+    getUser(function(u){
+        var owner = u.firstName + " " + u.lastName;
+        game.owner = owner;
+        post('/games', game, function(data){
+            console.log('created game. data: ' + data);
+            var gameIdx = data._id; //change!
+            game._id = gameIdx;
             game.isModerator = true;
             console.log(game);
 
-            put('/users', {id: user, key: ("createdGames."+gameIdx), value: game}, function(d){
+            put('/users', {id: u._id, key: ("createdGames."+gameIdx), value: game}, function(d){
                 console.log('updated. data: ' + d);
                 stopLoading(loader);
                 refreshNavCol();
@@ -269,19 +299,33 @@ function showSearchResults(search){
     get('/games', {name: {$regex: '(?i).*'+search+'.*'}}, function(data){
         $('#content-pane').html('');
         for(var res of data){
-            $('#content-pane').append('<div>'+res.name+'</div><br>');
+            var title = "<div class='search-title'>"+res.name+"</div><hr>";
+            var sUser = "<div class='search-item'>Owner: "+res.owner+"</div>";
+            var sLoc = "<div class='search-item'>Location: "+res.location+"</div>";
+            var sDate = "<div class='search-item'>Start Date: " + res.start+"</div>";
+            var id = res._id;
+            $('#content-pane').append('<div id="'+id+'" class="search-result">'+title+'<div class="search-items">'+sUser+sLoc+sDate+'</div></div><br>');
+            $('.search-result').on('click', function(){
+                get('/games', {strId: $(this).attr('id')}, function(games){
+                    var game = games[0];
+                    populateContentPane('Searched-Game', game)
+                });
+            });
         }
     });
 }
 
-/*---Populate Content Pane*/
+/*---Populate Content Pane---*/
 function populateContentPane(type, id){ //add some stuff to the pane
     switch(type){
         case "User Info":
             populateUserInfo(id);
             break;
         case "Game":
-            populateGameInfo(id);     
+            gameInfoFromDiv(id);     
+            break;
+        case "Searched-Game":
+            populateGameInfo(id);
             break;
     }
 }
@@ -299,19 +343,69 @@ function populateUserInfo(id) {
     })
 }
 
-function populateGameInfo(id){
-    var uid = firebase.auth().currentUser.uid;
+function gameInfoFromDiv(id){
+    var user = firebase.auth().currentUser;
+    var uid = user.uid;
+    var userDomain = "@" + user.email.split("@")[1];
     var gameID = id.split('-')[1];
     get('/users', {_id: uid}, function(data){
         var game = data[0][id.split('-')[0]][gameID];
-        $("#content-pane").load('gameContent.html', function(){
-            $('.gameName').html(game.name);
-            $('.location').html(game.location);
-            $('.description').html(game.description);
-        });
         console.log('game info');
+        populateGameInfo(game);
+    });
+}
+
+function populateGameInfo(game){
+    var user = firebase.auth().currentUser;
+    var userDomain = "@" + user.email.split("@")[1];
+    getUser(function(user){
+        $("#content-pane").load('gameContent.html', function(){
+                $('.gameName').html(game.name);
+                $('.location').html(game.location);
+                $('.owner').html(game.owner);
+                $('.startDate').html(game.start);
+                $('.description').html(game.description);
+                if(!(game.strId in user.gamesPlaying)){
+                    $('.joinButton').fadeIn(500, function(){
+                        $('.joinButton').on('click', function(){
+                            joinGameClick(game, userDomain);            
+                        });
+                    });
+                }
+        });
     });
 }
 
 
 
+function joinGameClick(game, userDomain){
+    var id = game._id;
+    var domainBool = (game.domain.length == 0 || game.domain == userDomain);
+    if('password' in game){
+        $('.joinPass').slideDown(300);
+        $('.joinButton').off('click').on('click', function(){
+            if($('.joinPass').val() == game.password && domainBool)
+                joinGame(id);
+            else if(domainBool)
+                $('.joinPass').css({'border-color': 'red'});
+            else
+                alert("You don't belong to the required domain");
+        });
+    }
+    else if(domainBool){
+        joinGame(id);
+    }
+    else{
+        alert("You don't belong to the required domain");
+    }
+}
+
+function deleteUser(){
+    var user = firebase.auth().currentUser;
+    ajaxDelete('/users', {_id: user.uid}, function(data){
+        console.log('deleted from mongo');
+        user.delete().then(function(){
+            console.log('deleted from firebase');
+        }).catch(genCatch);
+    });
+}

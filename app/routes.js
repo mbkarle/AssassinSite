@@ -40,9 +40,12 @@ module.exports = function(db, app) {
         })
 
         .post(function(req, res){
-            
+                   
             console.log("Req body: " + req.body);
             var toInsert = req.body;
+            delete toInsert.createdGames.init;
+            delete toInsert.gamesPlaying.init;
+
             db.collection("userlist").insertOne(toInsert, function(err, result){
                 if(err) throw err;
                 res.json(result);
@@ -54,7 +57,15 @@ module.exports = function(db, app) {
             putFunc(db, 'userlist', body, function(result){
                 res.json(result);
             });
+        })
+
+        .delete(function(req, res){
+            db.collection('userlist').deleteOne(req.query, function(err, result){
+                if(err) throw err;
+                res.json(result);
+            })
         });
+
         
 
 };

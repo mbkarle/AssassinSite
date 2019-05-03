@@ -69,6 +69,12 @@ html, body{
     padding: 20px;
     border: 1px solid #888;
     width: 50%; /* Could be more or less, depending on screen size */
+
+}
+
+.modal-content-wrapper {
+    max-height: 700px;
+    overflow: scroll;
 }
 
 /* The Close Button */
@@ -329,23 +335,37 @@ button:hover {
 
 /*---------------search-------------*/
 
-.search-result{
-    background-color: #aaaaaa;
-    display: flex;
-    height:200px;
-    width: 80%;
+.search-result, .rounded-container{
+    background-color: #fff;
+    width: 90%;
+    border-radius: 25px;
+    outline: none;
+    border-style: solid;
+    border-color: rgb(209, 213, 218);
+    border-width: 1px;
+    box-shadow: inset 0 1px 2px rgba(27, 31, 35, .075);
+    height:12%;
+    padding: 20px;
 }
 
 .search-result:hover{
-    color: #888888;
+    border: 1px solid rgb(33, 136, 255);
 }
 
-.search-user{
-    display: flex;
+.search-title {
+    font-size: 20px;
+    font-weight: 700;
 }
 
-.search-date{
+.search-items{
     display: flex;
+    padding: 5px;
+}
+
+.search-item {
+    flex: 1;
+    padding: 5px;
+    min-width: 30%;
 }
 
 /*---------------Flex-------------*/
@@ -376,36 +396,34 @@ button:hover {
    text-align: center;
 }
 
-/*--------game styling-------*/
-.test-container{
-    min-width: 50%;
-    min-height: 10%;
-    margin: auto;
+
+.rounded-container {
+    border: 1px solid #777;
+    height: auto;
+    margin-bottom: 10px;
 }
 
-.game-name{
-    float: left;
-    width: 33.33%;
-    margin: auto;
-    margin-top: 20px;
-
+.internal-row {
+    display: flex;
 }
 
-.test-container:hover{
-    background-color: #777777;
+.internal-label {
+    padding: 5px 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    border-right: 1px solid #aaa;
+    width: 15%;
 }
 
-#testjoin{
-    float: right;
-    width: 33.33%;
-    margin: auto;
-    margin-top: -10px;
+.internal-value {
+    flex: 1;
+    padding: 5px;
 }
 
-.creator{
-
-    width: 33.33%;
-    margin: auto;
-    margin-top: 20px;
+.container-header {
+    margin-bottom: 2px;
 }
 
+.gameName {
+    text-align:center;
+}

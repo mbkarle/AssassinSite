@@ -142,8 +142,8 @@ function signUp(email, password, firstName, lastName){
                 email: u.email,
                 firstName: firstName,
                 lastName: lastName,
-                createdGames: {},
-                gamesPlaying: {},
+                createdGames: {init: true},
+                gamesPlaying: {init: true},
                 totalKills: 0
             }
             post("/users", userObj, function(data){
@@ -164,9 +164,4 @@ function logOut(){
         .catch(genCatch); 
 }
 
-function genCatch(error){
-     // Handle Errors here.
-     var errorCode = error.code;
-     var errorMessage = error.message;
-     console.log(errorMessage);
-}
+
