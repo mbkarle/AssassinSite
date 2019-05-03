@@ -1,4 +1,3 @@
-//we can edit
 /*----------Required Modules----------*/
 const express = require('express');
 const path = require('path');
