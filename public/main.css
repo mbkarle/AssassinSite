@@ -375,3 +375,37 @@ button:hover {
 .flex-center {
    text-align: center;
 }
+
+/*--------game styling-------*/
+.test-container{
+    min-width: 50%;
+    min-height: 10%;
+    margin: auto;
+}
+
+.game-name{
+    float: left;
+    width: 33.33%;
+    margin: auto;
+    margin-top: 20px;
+
+}
+
+.test-container:hover{
+    background-color: #777777;
+}
+
+#testjoin{
+    float: right;
+    width: 33.33%;
+    margin: auto;
+    margin-top: -10px;
+}
+
+.creator{
+
+    width: 33.33%;
+    margin: auto;
+    margin-top: 20px;
+}
+
