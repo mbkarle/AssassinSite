@@ -86,3 +86,21 @@ function putFunc(db, collectionName, obj, success){
 }
 
 //TODO: write middleware to process permissions
+
+function processPermissions (firebaseuid, user_json) {
+    // Identify current user with google API and get email
+    // Compare that email with the email field from the query response
+    // If the emails are the same, set fieldsToOmit to "self" json object in the omissions.js
+    var omitted_fields = require('omissions');
+    var fieldsToOmit;
+    if (firebaseuid === user_json._id){
+        fieldsToOmit = omitted_fields[0];
+    }
+    else {
+        fieldsToOmit = omitted_fields[1];
+    }
+    fieldsToOmit.forEach(field => delete user_json[field]);
+    return user_json;
+
+
+}
