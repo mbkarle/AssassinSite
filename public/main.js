@@ -373,7 +373,7 @@ function populateGameInfo(game){
                         });
                     });
                 }
-                if(game.isModerator){
+                if(game.isModerator == 'true'){
                     $('.editButton').fadeIn(500);
                 }
         });
