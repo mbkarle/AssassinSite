@@ -70,6 +70,7 @@ function initializeListeners(){
 
 function loadUserData(){
     refreshNavCol();
+    checkNotifications();
 }
 
 function refreshToolListeners(){
@@ -85,6 +86,7 @@ function refreshToolListeners(){
 /*=================================*/ 
 
 function activate(data_type, divID){
+   interval.clearAll();
    $('.active').removeClass('active');
    $('#'+divID).addClass('active');
    populateContentPane(data_type, divID);
@@ -94,8 +96,8 @@ function activate(data_type, divID){
 function refreshNavCol(){
     $('#yourCreations, #yourPlaying').html('');
     var user = firebase.auth().currentUser.uid; 
-    get('/users', {_id: user}, function(data){
-        var u = data[0];
+    getUser(function(data){
+        var u = data;
         var createdGames = u.createdGames;
         if(Object.keys(createdGames).length == 0){
             $('#yourCreations').html("You haven't created any games yet!");
@@ -103,7 +105,9 @@ function refreshNavCol(){
             for(var idx in createdGames){
                 var game = createdGames[idx];
                 $('#yourCreations').append(createGameDiv(game.name, "createdGames-"+idx));
-            }
+                 if(idx in u.gamesPlaying)
+                   $('#createdGames-'+game._id).removeClass('toolItem').addClass('inactive').append(' (playing)');
+           }
         }
         
         var gamesPlaying = u.gamesPlaying;
@@ -162,17 +166,22 @@ function closeMainModal(){
 /*---------Join Game---------*/
 function joinGame(id){
     getUser(function(user){
-       var gameIndex = id; //change!
+       var gameIndex = id; 
        put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user}, function(game){
            game = game.value;
-           if(!('isModerator' in game))
-               game.isModerator = false;
+           if(!(id in user.gamesPlaying) && game.hasStarted == 'false'){
+               if(!('isModerator' in game))
+                   game.isModerator = (game.id in user.createdGames)
 
-           
-           put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
-               console.log(data);
-               refreshNavCol();
-           });
+               
+               put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
+                   console.log(data);
+                   refreshNavCol();
+               });
+           }
+           else{
+               alert('This game has started or you are already a participant');
+           }
 
        });
     });
@@ -241,20 +250,22 @@ function launchGameCreation(){
         var description = $('.gameDescription').val();
         var domain = $('.userRestrict').val();
         var password = $('.gamePass').val();
-        createGame(name, startDate, endDate, loc, description, domain, password);
+        var killInterval = $('.killInterval').val();
+        createGame(name, startDate, endDate, loc, description, domain, password, killInterval);
         closeMainModal();
     });
 }
 
 /*---Create Game---*/
-function createGame(name, startDate, endDate, loc, description, domain, password){
+function createGame(name, startDate, endDate, loc, description, domain, password, killInterval){
     var loader = startLoading();
-    var game = {'name': name, 'start': startDate, 'end': endDate, 'location': loc, 'description': description, 'domain': domain, 'password': password, "hasStarted": false };
+    var game = {'name': name, 'start': startDate, 'end': endDate, 'location': loc, 'description': description, 'domain': domain, 'password': password, "hasStarted": false, killInterval: killInterval };
     if(game.password.length == 0)
         delete game.password;
     getUser(function(u){
         var owner = u.firstName + " " + u.lastName;
         game.owner = owner;
+        game.ownerId = u._id;
         post('/games', game, function(data){
             console.log('created game. data: ' + data);
             var gameIdx = data._id; //change!
@@ -277,6 +288,33 @@ function createGameDiv(gameName, id){
      return '<div class="toolItem" data-type="Game" id="'+id+'">'+gameName+'</div>';
 }
 
+function checkNotifications(){
+    getUser(function(user){
+        if('notifications' in user){
+            var notifications = [];
+            for(var n of user.notifications)
+                notifications.push(new InternalNotification(n.title, n.message, n.buttons, n.data));
+            openNotifications(notifications, 0);
+        }
+    });
+}
+
+function openNotifications(notifications, idx){
+    if(idx < notifications.length){
+        openNewModal(notifications[idx].modal_items);
+        dismissNotification(function(data){console.log(data);});
+        $(document).off('click').on('click', function(){
+            openNotifications(notifications, idx + 1);
+        });
+    }
+    else{
+        $(document).off('click');
+        closeMainModal();
+    }
+
+}
+
+
 /*---Loading animation---*/
 function startLoading(){
     $('#main-modal').show();
@@ -293,6 +331,7 @@ function stopLoading(timer){
     clearInterval(timer);
     $('#main-modal-content').show();
     $('.loading').hide();
+    $('.modal').hide();
 }
 
 /*---------Search Functionality---------*/
@@ -333,8 +372,8 @@ function populateContentPane(type, id){ //add some stuff to the pane
 
 //do some stuffs
 function populateUserInfo(id) {
-    get("/users", {_id: id}, function(data){
-        var u = data[0];
+    getUser(function(data){
+        var u = data;
         console.log(data);
         $("#content-pane").html(
             "<h1>Welcome</h1><br>"+
@@ -349,8 +388,8 @@ function gameInfoFromDiv(id){
     var uid = user.uid;
     var userDomain = "@" + user.email.split("@")[1];
     var gameID = id.split('-')[1];
-    get('/users', {_id: uid}, function(data){
-        var game = data[0][id.split('-')[0]][gameID];
+    getUser(function(data){
+        var game = data[id.split('-')[0]][gameID];
         console.log('game info');
         populateGameInfo(game);
     });
@@ -376,35 +415,67 @@ function populateGameInfo(game){
                 if(game.isModerator == 'true'){
                     $('.editButton').fadeIn(500);
                 }
+                if(game.hasStarted == 'true'){
+                    $('.gameActive').fadeIn(500);
+                    get('/users', {_id: game.target}, function(targetData){
+                        var targetUser = targetData[0];
+                        $('.target').html(targetUser.firstName + " " + targetUser.lastName);
+                    });
+                    if('safeties' in game)
+                        $('.safeties').html(game.safeties.join(', '));
+                    var deadline = new Date(game.killDeadline);
+                    interval.make(function(){
+                        $('.deadline').html("Time to kill target: <br>" + dateCountdown(deadline));
+                        console.log('changing countdown');
+                    }, 1000);
+                }
         });
     });
 }
 
 function startGame(id) {
-    get('/games',{strId: id},function(data){
-        console.log(data);
-        var game = data[0];
-        var playArr = game.players;
-        var playIds = [];
-        var targetArr = [];
-        console.log(playArr);
-        for(let i=0; i < playArr.length; i++){
-            playIds.push(playArr[i]._id);
-        }
-        console.log(playIds);
-        targetArr = match(playIds);
-
-        for(let i=0; i < playArr.length; i++){
-            for (let j = 0; j < targetArr.length; j++) {
-                if (playArr[i]._id === targetArr[j][0]){
-                    playArr[i].target = targetArr[j][1]
+    var loader = startLoading();
+    getUser(function(user){
+        get('/games',{strId: id},function(game){
+            var game = game[0];
+            if(id in user.createdGames && game.hasStarted == 'false'){
+                var gameID = game._id;
+                var playArr = game.players;
+                var playIds = [];
+                var targetArr = [];
+                console.log(playArr);
+                for(let i=0; i < playArr.length; i++){
+                    playIds.push(playArr[i]._id);
                 }
+                console.log(playIds);
+                targets = match(playIds);
+
+                var date = new Date();
+                date.setDate(date.getDate() + parseInt(game.killInterval, 10));
+
+                function putTarget(user, target, idx, max){//function to recursively add targets
+                    put('/users', {id: user, setPair:{['gamesPlaying.'+gameID+'.target']: target, ['gamesPlaying.'+gameID+'.hasStarted']: true, ['gamesPlaying.'+gameID+'.killDeadline']: date}}, function(res){
+                        if(idx < max){
+                            putTarget(target, targets[target], idx + 1, max);
+                        }
+                        else{
+                            put('/games', {filter: {strId:id}, key: 'hasStarted', value: true}, function(result){
+                                stopLoading(loader);
+                            });
+                        }
+                    });
+                }
+
+                var starter = Object.keys(targets)[0];
+                var target = targets[starter];
+                var max = Object.keys(targets).length - 1;
+                putTarget(starter, target, 0, max);
             }
-
-        }
-
-        //db.collection('games').update(game, {players:playArr}, {upsert:true})
-
+            else{
+                alert('Error: game has already started or you do not have permission to start game');
+                stopLoading(loader);
+            }
+        });
     });
 }
 
@@ -438,4 +509,77 @@ function deleteUser(){
             console.log('deleted from firebase');
         }).catch(genCatch);
     });
+}
+
+function dateCountdown(deadline){
+    var now = new Date().getTime();
+    var distance = deadline.getTime() - now;
+
+    // Time calculations for days, hours, minutes and seconds
+    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    return (distance > 0)?(days + " days " + hours + " hrs " + minutes + " min " + seconds + " sec "):"Deadline Passed!"
+}
+
+/*---------Report player killed---------*/
+function reportPlayerKilled(id, gameId){
+    get('/games', {strId: gameId}, function(owner){
+        var gameName = game.name;
+        var message = 'Your assassin reported you as dead in ' + gameName + '. Please confirm whether or not this is the case.';
+        var report = new InternalNotification('Player Killed', message, ['Dispute', 'Confirm'], {gameId: gameId});
+        var keyPair = {notifications: report.dbStore};
+        sendNotification(id, report, function(response){
+            sendNotification(owner._id, report, function(res){
+                console.log('pushed kill report');
+            });
+        });
+    });
+}
+
+function sendNotification(recipient, notification, callback){
+    put('/users', {filter: {_id: recipient}, setPair: {notifications: notification.dbStore}, op: '$push'}, function(response){
+        callback(response);
+    });
+}
+
+function dismissNotification(callback){
+    put('/users', {filter: {_id: firebase.auth().currentUser.uid}, key: 'notifications', value: -1, op: '$pop'}, function(data){
+       callback(data);
+    });
+}
+
+/*---------Global intervals object for countdowns---------*/
+var interval = {
+    // to keep a reference to all the intervals
+    intervals : new Set(),
+
+    // create another interval
+    make(...args) {
+        var newInterval = setInterval(...args);
+        this.intervals.add(newInterval);
+        return newInterval;
+    },
+
+    // clear a single interval
+    clear(id) {
+        this.intervals.delete(id);
+        return clearInterval(id);
+    },
+
+    // clear all intervals
+    clearAll() {
+        for (var id of this.intervals) {
+            this.clear(id);
+        }
+    }
+};
+
+/*---------Notification Button Listeners---------*/
+var notificationButtons = {
+    'Confirm': function(){
+
+    }
 }

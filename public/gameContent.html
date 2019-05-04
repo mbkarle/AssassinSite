@@ -4,31 +4,48 @@
     </head>
     <body>
         <div>
-            <h1 class='rounded-container gameName'></h1>
+            <h1 class='rounded-container gameName info-title'></h1>
             <div class='buttonWrapper'>
                 <button class='joinButton' style='display:none;'>Join</button>
                 <input class='joinPass' placeholder='Game Password' type='password' autocomplete='new-password' style='display:none;'>
                 <button class='editButton' style='display:none;'>Edit</button>
             </div>
         </div>
-        <div class='rounded-container gameDetails'>
-            <h3 class='container-header'>Details</h3><hr>
+        <div class='rounded-container info-title gameActive' style='display:none;'>
             <div class='internal-row'>
-                <div class='internal-label'>Owner</div>
-                <div class='internal-value owner'></div>
+                <h2 class='container-header'>Game Active!</h2>
+                <div class='internal-value deadline'></div>
+            </div>
+            <hr>
+            <div class='internal-row'>
+                <div class='internal-label'>Target</div>
+                <div class='internal-value target'></div>
             </div>
             <div class='internal-row'>
-                <div class='internal-label'>Location</div>
-                <div class='internal-value location'></div>
-            </div>
-            <div class='internal-row'>
-                <div class='internal-label'>Start Date</div>
-                <div class='internal-value startDate'></div>
+                <div class='internal-label'>Safety Items</div>
+                <div class='internal-value safeties'></div>
             </div>
         </div>
-        <div class='rounded-container'>
-            <h3 class='container-header'>Description</h3><hr>
-            <div class='description'></div>
+        <div class='container-wrapper'>
+            <div class='rounded-container gameDetails'>
+                <h3 class='container-header'>Details</h3><hr>
+                <div class='internal-row'>
+                    <div class='internal-label'>Owner</div>
+                    <div class='internal-value owner'></div>
+                </div>
+                <div class='internal-row'>
+                    <div class='internal-label'>Location</div>
+                    <div class='internal-value location'></div>
+                </div>
+                <div class='internal-row'>
+                    <div class='internal-label'>Start Date</div>
+                    <div class='internal-value startDate'></div>
+                </div>
+            </div>
+            <div class='rounded-container'>
+                <h3 class='container-header'>Description</h3><hr>
+                <div class='description'></div>
+            </div>
         </div>
     </body>
 </html>

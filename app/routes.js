@@ -2,11 +2,7 @@ module.exports = function(db, app) {
 
     app.route('/games')
         .get(function(req, res){
-            var query = req.query || {};
-            console.log('query: ' + query.strId);
-            db.collection("games").find(query).toArray(function(err, result) {
-                console.log("result " + JSON.stringify(result));
-                if(err) throw err;
+            getFunc(db, 'games', req.query, function(result){
                 res.json(result);
             });
         })
@@ -23,6 +19,7 @@ module.exports = function(db, app) {
             });
         })
         .put(function(req, res){
+            console.log('Games Request: ' + JSON.stringify(req.body));
             putFunc(db, 'games', req.body, function(result){
                 console.log("Games Result: " + JSON.stringify(result));
                 res.json(result);
@@ -31,16 +28,9 @@ module.exports = function(db, app) {
 
     app.route("/users")
         .get(function(req, res){
-            var query = req.query;
-            var curr_user = query.current_user;
-            delete query.current_user;
-            db.collection("userlist").find(query).toArray(function(err, result){
-                console.log("Current User " + query.current_user);
-                result = processPermissions(query.current_user, result)
-                if(err) throw err;
-                console.log("Users Result: " + JSON.stringify(result));
-                res.json(result);
-            });
+           getFunc(db, 'userlist', req.query, function(result){
+               res.json(result);
+           });
         })
 
         .post(function(req, res){
@@ -70,19 +60,31 @@ module.exports = function(db, app) {
             })
         });
 
+
         
 
 };
 
+function getFunc(db, collectionName, query, success){
+    var curr_user = query.current_user;
+    delete query.current_user;
+    db.collection(collectionName).find(query).toArray(function(err, result){
+        var toSend = [];
+        result.forEach((res) => toSend.push(processPermissions(curr_user, res)));
+        if(err) throw err;
+        success(result);
+    });
+
+}
+
 function putFunc(db, collectionName, obj, success){
     var operation = obj.op || "$set";
-    var filter;
-    if('filter' in obj)
-        filter = obj.filter;
-    else
-        filter = {_id: obj.id};
+    if(operation == '$pop')
+        obj.value = parseInt(obj.value);
+    var filter = ('filter' in obj)?obj.filter:{_id: obj.id};
+    var setPair = ('setPair' in obj)?obj.setPair:{[obj.key]: obj.value};
     db.collection(collectionName).findOneAndUpdate(filter, {
-        [operation]: {[obj.key]: obj.value}
+        [operation]: setPair
     }, function(err, result){
         if(err) throw err;
         success(result);
@@ -96,12 +98,12 @@ function processPermissions (firebaseuid, user_json) {
     var fieldsToOmit;
     if (firebaseuid === user_json._id){
         fieldsToOmit = omitted_fields.Self;
+        console.log('SELF');
     }
     else {
         fieldsToOmit = omitted_fields.User;
+        console.log('RANDOM USER');
     }
-    console.log("Before omissions: " + user_json);
     fieldsToOmit.forEach(field => delete user_json[field]);
-    console.log("After omissions: " + user_json);
     return user_json;
 }
