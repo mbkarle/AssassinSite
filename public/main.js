@@ -341,13 +341,20 @@ function populateContentPane(type, id){ //add some stuff to the pane
 function populateUserInfo(id) {
     getUser(function(data){
         var u = data;
-        console.log(data);
-        $("#content-pane").html(
-            "<h1>Welcome</h1><br>"+
-            "<h2>User: </h2>" + "<p>"+u.firstName+" " + u.lastName + "</p><br>" +
-            "<h2>Total Kills: </h2>" + "<p>"+ u.totalKills + "</p>"
-        );
-    })
+        $("#content-pane").load('userInfo.html', function(){
+            $('.email').html(u.email);
+            $('.userName').html(u.firstName + ' ' + u.lastName);
+            $('.totalKills').html(u.totalKills);
+            $('.totalGames').html(Object.keys(u.gamesPlaying).length);
+            var games = u.gamesPlaying;
+            $('.currentGames').html('');
+            for(id in games){
+                var game = games[id];
+                if(game.hasStarted == 'true')
+                    $('.currentGames').append(game.name + "<br>");
+            }
+        });
+    }, ['firstName', 'lastName', 'totalKills', 'gamesPlaying', 'email']);
 }
 
 function gameInfoFromDiv(id){
