@@ -151,6 +151,7 @@ function getFunc(db, collectionName, query, success){
         success(toSend);
     });
 
+
 }
 
 function putFunc(db, collectionName, obj, success){

@@ -665,6 +665,7 @@ function isAlive(game, userId){
 }
 
 function propagateGameChange(id, callback){
+    var loader = startLoading();
     get('/games', {strId: id}, function(game){
         var game = game[0];
         var gameId = game._id;
@@ -688,6 +689,7 @@ function propagateGameChange(id, callback){
                 });
             }
             else{
+                stopLoading(loader);
                 callback();
             }
         }

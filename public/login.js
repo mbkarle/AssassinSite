@@ -20,7 +20,13 @@ firebase.auth().onAuthStateChanged(function(user) {
         $(".loggedIn").show();
         $('.userInfo').attr('id', user.uid);
         loadUserData();
-        populateContentPane("User Info", user.uid);
+        
+        //check if searched
+        var urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('search'))
+            showSearchResults(urlParams.get('search'));
+        else
+            populateContentPane("User Info", user.uid);
     }
     else{
         //User has been logged out
