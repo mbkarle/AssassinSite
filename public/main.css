@@ -22,9 +22,9 @@ html, body{
 
 #logo {
     width:75px;
-    height:56px;
+    height:75px;
     position: relative;
-    top: 5px;
+    /*top: 5px;*/
 }
 
 #buttonContainer {
