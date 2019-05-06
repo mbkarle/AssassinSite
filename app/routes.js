@@ -29,9 +29,10 @@ module.exports = function(db, app) {
     app.route("/users")
         .get(function(req, res){
            getFunc(db, 'userlist', req.query, function(result){
+               console.log('returning users');
                res.json(result);
            });
-        })
+       })
 
         .post(function(req, res){
                    
@@ -124,6 +125,9 @@ function getFunc(db, collectionName, query, success){
     }
 
     delete query.current_user;
+    var filter = Object.keys(query)[0];
+    if(filter.includes('target'))
+        return success({'message': "You can't do that..."});
     db.collection(collectionName).find(query).toArray(function(err, result){
         var toSend = [];
         result.forEach((res) => {
