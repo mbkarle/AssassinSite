@@ -3,12 +3,12 @@
         <link href='gameContent.css' type='text/css' rel='stylesheet'/>
     </head>
     <body>
-        <div>
-            <h1 class='rounded-container gameName info-title'></h1>
-            <div class='buttonWrapper'>
+        <div class='rounded-container info-title flex'>
+            <h1 class='gameName'></h1>
+            <div class='buttonWrapper flex'>
                 <button class='joinButton' style='display:none;'>Join</button>
-                <input class='joinPass' placeholder='Game Password' type='password' autocomplete='new-password' style='display:none;'>
                 <button class='editButton' style='display:none;'>Edit</button>
+                <button class='startButton' style='display:none;'>Start</button>
             </div>
         </div>
         <div class='rounded-container info-title gameActive' style='display:none;'>
@@ -20,10 +20,16 @@
             <div class='internal-row'>
                 <div class='internal-label'>Target</div>
                 <div class='internal-value target'></div>
+                <div class='button-wrapper'><button class='reportKill'>Report kill</button></div>
             </div>
             <div class='internal-row'>
                 <div class='internal-label'>Safety Items</div>
                 <div class='internal-value safeties'></div>
+                <div class='button-wrapper'><button class='addSafetiesButton' style='display:none;'>Edit Safeties</button></div>
+            </div>
+            <div class='internal-row'>
+                <div class='internal-label'>Kills</div>
+                <div class='internal-value kills'></div>
             </div>
         </div>
         <div class='container-wrapper'>

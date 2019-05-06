@@ -73,7 +73,7 @@ html, body{
 }
 
 .modal-content-wrapper {
-    max-height: 700px;
+    max-height: 650px;
     overflow: scroll;
 }
 
@@ -453,4 +453,25 @@ button:hover {
 
 .modal-button {
     margin: 5px 10px !important;
+}
+
+.flex {
+    display: flex;
+}
+
+.gameName {
+    flex: 1;
+}
+
+.buttonWrapper {
+    float: right;
+}
+
+.buttonWrapper > button {
+    margin: 0 10px 15px 10px;
+    padding: 5px 8px;
+}
+
+.stackedButton {
+    margin: 10px auto !important;
 }

@@ -5,9 +5,9 @@ class InternalNotification {
        this.buttons = buttons;
        this.data = data || {};
        var buttonDivs = "";
-       var gameID = ('gameId' in this.data)?"id='"+data.gameId+"'" : '';
+       var id = (Object.keys(this.data).length > 0)?"data-info='"+JSON.stringify(data)+"'" : '';
        for(var button of buttons){
-           buttonDivs += "<button "+gameID+" class='modal-button "+button+"'>"+button+"</button>";
+           buttonDivs += "<button "+id+" class='modal-button "+button+"'>"+button+"</button>";
        }
        this.modal_items = [
             {
@@ -33,6 +33,11 @@ class InternalNotification {
            buttons: this.buttons,
            data: this.data
        };
+    }
+
+    updateMessage(message){
+        this.message = message;
+        this.dbStore.message = message;
     }
 
 }

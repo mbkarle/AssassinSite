@@ -7,9 +7,12 @@ function get(route, query,  callback){
 
 }
 
-function getUser(callback){
+function getUser(callback, desired){
+    var query = {_id:id};
+    if(!(typeof desired == 'undefined'))
+        query.desired = desired;
     var id = firebase.auth().currentUser.uid;
-    get('/users', {_id: id}, function(data){
+    get('/users', {_id: id, desired: desired}, function(data){
         callback(data[0]);
     });
 }
@@ -33,6 +36,7 @@ function post(route, data, callback){
 }
 
 function put(route, data, callback){
+    data.current_user = firebase.auth().currentUser.uid;
     $.ajax({
         url: route,
         type: 'PUT',
@@ -72,6 +76,12 @@ function loadUserData(){
     refreshNavCol();
     checkNotifications();
 }
+
+function refreshGamePage(game){
+    refreshNavCol();
+    populateGameInfo(game);
+}
+
 
 function refreshToolListeners(){
     $('.toolItem').on('click', function(){
@@ -121,7 +131,7 @@ function refreshNavCol(){
             }
         }
         refreshToolListeners();
-    });
+    }, ['gamesPlaying', 'createdGames']);
 
 }
 
@@ -134,6 +144,7 @@ function refreshNavCol(){
  *      content (string of innertext)
  */
 function openNewModal(items){
+    $('#mmc-wrapper').html('');
     var count = 0;
      for(var obj of items){
          var tag = obj.type || "div";
@@ -167,16 +178,17 @@ function closeMainModal(){
 function joinGame(id){
     getUser(function(user){
        var gameIndex = id; 
-       put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user}, function(game){
+       put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user._id}, function(game){
            game = game.value;
            if(!(id in user.gamesPlaying) && game.hasStarted == 'false'){
                if(!('isModerator' in game))
-                   game.isModerator = (game.id in user.createdGames)
+                   game.isModerator = (game._id in user.createdGames)
 
                
+               delete game.players;
                put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
                    console.log(data);
-                   refreshNavCol();
+                   refreshGamePage(game);
                });
            }
            else{
@@ -189,58 +201,7 @@ function joinGame(id){
 
 /*---Get input for game creation---*/
 function launchGameCreation(){
-    var items = [
-        {
-            type:'h1',
-            classes: [],
-            content: "Create Game"
-        },
-        {
-            type:'input',
-            classes: ['gameNameInp'],//todo
-            content: "Game Name"
-        },
-        {
-            type: 'div',
-            classes: ['modal-container'],
-            content: '<h3 class="contained-inp cont-label">Start Date</h3><h3 class="contained-inp cont-label">End Date</h3>'
-        },
-        {
-            type: 'div',
-            classes: ['modal-container'],
-            content: '<input id="startD" class="contained-inp" type="date"><input id="endD" class="contained-inp" type="date">'
-        },
-        {
-            type: 'input',
-            classes: ['locationInp'],
-            content: 'Game Location'
-        },
-        {
-            type: 'div',
-            classes: ['modal-container'],
-            content: '<input class="killInterval" placeholder="Kill interval? # of Days" type="number" min="1" max="365">'
-        },
-        {
-            type: 'textarea',
-            classes: ['tall-input', 'gameDescription'],
-            content: 'Description or unique rules'
-        },
-        {
-            type: 'input',
-            classes:['userRestrict'],
-            content: 'Regulate user domain? @example.com'
-        },
-        {
-            type: 'input',
-            classes: ['gamePass'],
-            content: 'Add game password?'
-        },
-        {
-            type: 'button',
-            classes: ['modal-createB'],
-            content: "Create"
-        }
-    ]
+    var items = modalContent['Create Game'];
     openNewModal(items);
     $(".modal-createB").on('click', function(){
         var name = $('.gameNameInp').val();
@@ -302,9 +263,14 @@ function checkNotifications(){
 function openNotifications(notifications, idx){
     if(idx < notifications.length){
         openNewModal(notifications[idx].modal_items);
-        dismissNotification(function(data){console.log(data);});
         $(document).off('click').on('click', function(){
             openNotifications(notifications, idx + 1);
+        });
+        $('.modal-button').off('click').on('click', function(){
+            notificationButtons[$(this).text()]($(this).attr('data-info'));
+            dismissNotification(idx, function(data){
+                console.log(data);
+            })
         });
     }
     else{
@@ -336,7 +302,8 @@ function stopLoading(timer){
 
 /*---------Search Functionality---------*/
 function showSearchResults(search){
-    get('/games', {name: {$regex: '(?i).*'+search+'.*'}}, function(data){
+    var desired = ['name', 'owner', 'location', 'start', '_id'];
+    get('/games', {name: {$regex: '(?i).*'+search+'.*'}, desired: desired}, function(data){
         $('#content-pane').html('');
         for(var res of data){
             var title = "<div class='search-title'>"+res.name+"</div><hr>";
@@ -346,7 +313,7 @@ function showSearchResults(search){
             var id = res._id;
             $('#content-pane').append('<div id="'+id+'" class="search-result">'+title+'<div class="search-items">'+sUser+sLoc+sDate+'</div></div><br>');
             $('.search-result').on('click', function(){
-                get('/games', {strId: $(this).attr('id')}, function(games){
+                get('/games', {strId: $(this).attr('id'), omit: ['players']}, function(games){
                     var game = games[0];
                     populateContentPane('Searched-Game', game)
                 });
@@ -405,6 +372,8 @@ function populateGameInfo(game){
                 $('.owner').html(game.owner);
                 $('.startDate').html(game.start);
                 $('.description').html(game.description);
+                $('.kills').html(game.kills);
+
                 if(!(game._id in user.gamesPlaying)){
                     $('.joinButton').fadeIn(500, function(){
                         $('.joinButton').on('click', function(){
@@ -412,22 +381,115 @@ function populateGameInfo(game){
                         });
                     });
                 }
-                if(game.isModerator == 'true'){
-                    $('.editButton').fadeIn(500);
+
+                if(game.isModerator == 'true' || game._id in user.createdGames){
+                    $('.editButton').fadeIn(500).on('click', function(){
+                        var items = modalContent['Create Game'];
+                        items[items.length - 1] = {
+                            type: 'button',
+                            classes: ['modal-editB'],
+                            content: 'Save Edits'
+                        };
+                        openNewModal(items);
+                        $('.modal-editB').on('click', function(){
+                            var setPair = {
+                                name: $('.gameNameInp').val(),
+                                start: $('#startD').val(),
+                                end: $('#endD').val(),
+                                loc: $('.locationInp').val(),
+                                description: $('.gameDescription').val(),
+                                domain: $('.userRestrict').val(),
+                                password: $('.gamePass').val(),
+                                killInterval: $('.killInterval').val()
+                            };
+                            for(key in setPair){
+                                if(key == "")
+                                    delete setPair[key];
+                            }
+                            put('/games', {filter:{strId: game._id}, setPair: setPair}, function(data){
+                                console.log("Updated Game: " + JSON.stringify(data));
+                                propagateGameChange(game._id, function(){
+                                    refreshNavCol();
+                                    getUser(function(userRes){
+                                        populateGameInfo(userRes.gamesPlaying[game._id]);
+                                        closeMainModal();
+                                    });
+                                });
+                            });
+                        });
+                    });
+
+                    $('.addSafetiesButton').fadeIn(500).on('click', function(){
+                        var items = modalContent['Add Safeties'];
+                        openNewModal(items);
+                        $('.addMoreSafeties').on('click', function(){
+                            $('.addSafeties').append('<input class="addSafety" placeholder="Add a safety item">');
+                        });
+                        $('.completeSafeties').on('click', function(){
+                            var safeties = [];
+                            var safetyInputs = $('.addSafeties input');
+                            for(input of safetyInputs){
+                                if(input.value.length > 0)
+                                    safeties.push(input.value);
+                            }
+                            put('/games', {filter: {strId: game._id}, setPair: {safeties: safeties}}, function(safetyRes){
+                                console.log('Added safeties: ' + safetyRes);
+                                propagateGameChange(game._id, function(){
+                                    refreshNavCol();
+                                    getUser(function(userRes){
+                                        closeMainModal();
+                                        populateGameInfo(userRes.gamesPlaying[game._id]);
+
+                                    });
+                                });
+                            });
+
+                        });
+                    });
                 }
                 if(game.hasStarted == 'true'){
                     $('.gameActive').fadeIn(500);
-                    get('/users', {_id: game.target}, function(targetData){
+                    get('/users', {_id: game.target, desired: ['_id', 'firstName', 'lastName']}, function(targetData){
                         var targetUser = targetData[0];
-                        $('.target').html(targetUser.firstName + " " + targetUser.lastName);
+                        if(targetUser._id == user._id){
+                            $('.target').html('You won');
+                            $('.deadline').html('You won');
+                            $('.reportKill').hide();
+                            interval.clearAll();
+                        }
+                        else{
+                            $('.target').html(targetUser.firstName + " " + targetUser.lastName);
+                        }
                     });
-                    if('safeties' in game)
-                        $('.safeties').html(game.safeties.join(', '));
-                    var deadline = new Date(game.killDeadline);
-                    interval.make(function(){
-                        $('.deadline').html("Time to kill target: <br>" + dateCountdown(deadline));
-                        console.log('changing countdown');
-                    }, 1000);
+                    
+                    //check for safeties
+                    get('/games', {strId: game._id, desired: ['safeties']}, function(gameRes){
+                        var gameRes = gameRes[0];
+                        if('safeties' in gameRes)
+                            $('.safeties').html(gameRes.safeties.join(', '));
+                    });
+                    
+                    //check if dead
+                    if(isAlive(game, user._id)){ 
+                        var deadline = new Date(game.killDeadline);
+                        interval.make(function(){
+                            $('.deadline').html("Time to kill target: <br>" + dateCountdown(deadline));
+                            console.log('changing countdown');
+                        }, 1000);
+                        $('.reportKill').on('click', function(){
+                            reportPlayerKilled(game.target, game._id);
+                            alert('A report has been sent. The target or moderator must confirm the kill before it is official.');
+                        });
+                    }
+                    else{
+                        $('.deadline').html("You've been killed!");
+                        $('.reportKill').hide().off('click');
+                    }
+                }
+                else if(game.isModerator == 'true' || game._id in user.createdGames){
+                    $('.startButton').fadeIn(500).on('click', function(){
+                        startGame(game._id);
+                    });
                 }
         });
     });
@@ -440,13 +502,9 @@ function startGame(id) {
             var game = game[0];
             if(id in user.createdGames && game.hasStarted == 'false'){
                 var gameID = game._id;
-                var playArr = game.players;
-                var playIds = [];
+                var playIds = game.players;
                 var targetArr = [];
-                console.log(playArr);
-                for(let i=0; i < playArr.length; i++){
-                    playIds.push(playArr[i]._id);
-                }
+                
                 console.log(playIds);
                 targets = match(playIds);
 
@@ -483,10 +541,28 @@ function joinGameClick(game, userDomain){
     var id = game._id;
     var domainBool = (game.domain.length == 0 || game.domain == userDomain);
     if('password' in game){
-        $('.joinPass').slideDown(300);
+        openNewModal([
+                {
+                    type: 'h1',
+                    classes: [],
+                    content: 'Join Game'
+                },
+                {
+                    type: 'input',
+                    classes: ['joinPass'],
+                    content: 'Entry Code'
+                },
+                {
+                    type: 'button',
+                    classes: ['joinButton'],
+                    content: 'Join Game'
+                }
+        ]);
         $('.joinButton').off('click').on('click', function(){
-            if($('.joinPass').val() == game.password && domainBool)
+            if($('.joinPass').val() == game.password && domainBool){
                 joinGame(id);
+                closeMainModal();
+            }
             else if(domainBool)
                 $('.joinPass').css({'border-color': 'red'});
             else
@@ -526,14 +602,26 @@ function dateCountdown(deadline){
 
 /*---------Report player killed---------*/
 function reportPlayerKilled(id, gameId){
-    get('/games', {strId: gameId}, function(owner){
+    get('/games', {strId: gameId, desired:['name', 'ownerId']}, function(game){
+        var game = game[0];
         var gameName = game.name;
+        var owner = game.ownerId;
         var message = 'Your assassin reported you as dead in ' + gameName + '. Please confirm whether or not this is the case.';
-        var report = new InternalNotification('Player Killed', message, ['Dispute', 'Confirm'], {gameId: gameId});
+        var report = new InternalNotification('Player Killed', message, ['Dispute', 'Confirm'], {
+            userId: id,
+            gameId: gameId,
+            killer: firebase.auth().currentUser.uid,
+        });
         var keyPair = {notifications: report.dbStore};
         sendNotification(id, report, function(response){
-            sendNotification(owner._id, report, function(res){
-                console.log('pushed kill report');
+            var killedName = response.value.firstName + " " + response.value.lastName;
+            report.updateMessage(killedName + ' was reported dead in ' + gameName + '. Please confirm whether or not this is the case.');
+            sendNotification(owner, report, function(res){
+                console.log('pushed kill report, ' + res);
+                var killVote = {[owner]: null, [id]: null};
+                put('/users', {filter: {_id: id}, setPair: {['gamesPlaying.'+gameId+'.killVote']: killVote}}, function(data){
+                    console.log('Put kill vote object');
+                });
             });
         });
     });
@@ -545,11 +633,70 @@ function sendNotification(recipient, notification, callback){
     });
 }
 
-function dismissNotification(callback){
-    put('/users', {filter: {_id: firebase.auth().currentUser.uid}, key: 'notifications', value: -1, op: '$pop'}, function(data){
-       callback(data);
+function dismissNotification(idx, callback){
+    getUser(function(user){
+        var notifications = user.notifications;
+        var op, setPair;
+        if(notifications.length > 1){
+            notifications.splice(idx, 1);
+            op = '$set';
+            setPair = {notifications: notifications};
+        }
+        else{
+            op = "$pull";
+            setPair = {notifications: {title: notifications[0].title}};
+        }
+        put('/users', {filter: {_id: user._id}, setPair: setPair, op: op}, function(data){
+            callback(data);
+        })
+    });
+} 
+
+function vote(vote, gameId, userId, killer){
+    var currId = firebase.auth().currentUser.uid;
+    put('/vote', {currId: currId, killer: killer, gameId: gameId, filter: {_id: userId}, setPair: {['gamesPlaying.'+gameId+'.killVote.' + currId]: vote}}, function(data){
+            console.log(data);
     });
 }
+
+function isAlive(game, userId){
+    var isVoting = ('killVote' in game);
+    return !(isVoting && (game.killVote[game.ownerId] == 'true' || game.killVote[userId] == 'true'));
+}
+
+function propagateGameChange(id, callback){
+    get('/games', {strId: id}, function(game){
+        var game = game[0];
+        var gameId = game._id;
+        var players = game.players;
+        var update = {
+            ['gamesPlaying.'+gameId+'.name']: game.name,
+            ['gamesPlaying.'+gameId+'.start']: game.start,
+            ['gamesPlaying.'+gameId+'.end']: game.end,
+            ['gamesPlaying.'+gameId+'.loc']: game.loc,
+            ['gamesPlaying.'+gameId+'.description']: game.description,
+            ['gamesPlaying.'+gameId+'.domain']: game.domain,
+            ['gamesPlaying.'+gameId+'.password']: game.password,
+            ['gamesPlaying.'+gameId+'.killInterval']: game.killInterval,
+            ['gamesPlaying.'+gameId+'.safeties']: game.safeties
+        }
+        function propagate(idx){
+            if(idx < players.length){
+                var player = players[idx];
+                put('/users', {filter: {_id: player}, setPair: update}, function(data){
+                    propagate(idx + 1);
+                });
+            }
+            else{
+                callback();
+            }
+        }
+        propagate(0);
+    });
+}
+
+
+    
 
 /*---------Global intervals object for countdowns---------*/
 var interval = {
@@ -579,7 +726,13 @@ var interval = {
 
 /*---------Notification Button Listeners---------*/
 var notificationButtons = {
-    'Confirm': function(){
+    'Confirm': function(id){
+        var data = JSON.parse(id);
+        vote(true, data.gameId, data.userId, data.killer); 
+    },
 
+    'Dispute': function(id){
+        var data = JSON.parse(id);
+        vote(false, data.gameId, data.userId, data.killer);
     }
 }
