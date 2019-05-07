@@ -439,18 +439,7 @@ function populateGameInfo(game){
                                 if(input.value.length > 0)
                                     safeties.push(input.value);
                             }
-                            put('/games', {filter: {strId: game._id}, setPair: {safeties: safeties}}, function(safetyRes){
-                                console.log('Added safeties: ' + safetyRes);
-                                propagateGameChange(game._id, function(){
-                                    refreshNavCol();
-                                    getUser(function(userRes){
-                                        closeMainModal();
-                                        populateGameInfo(userRes.gamesPlaying[game._id]);
-
-                                    });
-                                });
-                            });
-
+                            addSafeties(game._id, safeties);   
                         });
                     });
                 }
@@ -704,7 +693,20 @@ function propagateGameChange(id, callback){
     });
 }
 
+function addSafeties(gameId, safeties){
+    put('/games', {filter: {strId: gameId}, setPair: {safeties: safeties}}, function(safetyRes){
+        console.log('Added safeties: ' + safetyRes);
+        propagateGameChange(gameId, function(){
+            refreshNavCol();
+            getUser(function(userRes){
+                closeMainModal();
+                populateGameInfo(userRes.gamesPlaying[gameId]);
 
+            });
+        });
+    });
+
+}
     
 
 /*---------Global intervals object for countdowns---------*/
