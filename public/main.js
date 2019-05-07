@@ -208,7 +208,7 @@ function launchGameCreation(){
         var startDate = $('#startD').val();
         var endDate = $('#endD').val();
         var loc = $('.locationInp').val();
-        var description = $('.gameDescription').val();
+        var description = encodeURI($('.gameDescription').val());
         var domain = $('.userRestrict').val();
         var password = $('.gamePass').val();
         var killInterval = $('.killInterval').val();
@@ -378,7 +378,7 @@ function populateGameInfo(game){
                 $('.location').html(game.location);
                 $('.owner').html(game.owner);
                 $('.startDate').html(game.start);
-                $('.description').html(game.description);
+                $('.description').html(decode(encodeURI(game.description)));
                 $('.kills').html(game.kills);
 
                 if(!(game._id in user.gamesPlaying)){
@@ -404,7 +404,7 @@ function populateGameInfo(game){
                                 start: $('#startD').val(),
                                 end: $('#endD').val(),
                                 loc: $('.locationInp').val(),
-                                description: $('.gameDescription').val(),
+                                description: encodeURI($('.gameDescription').val()),
                                 domain: $('.userRestrict').val(),
                                 password: $('.gamePass').val(),
                                 killInterval: $('.killInterval').val()
@@ -418,8 +418,11 @@ function populateGameInfo(game){
                                 propagateGameChange(game._id, function(){
                                     refreshNavCol();
                                     getUser(function(userRes){
-                                        populateGameInfo(userRes.gamesPlaying[game._id]);
                                         closeMainModal();
+                                         if(game._id in userRes.createdGames)
+                                            populateGameInfo(userRes.createdGames[game._id]);
+                                         else
+                                            populateGameInfo(userRes.gamesPlaying[game._id]); 
                                     });
                                 });
                             });
@@ -665,7 +668,8 @@ function propagateGameChange(id, callback){
     get('/games', {strId: id}, function(game){
         var game = game[0];
         var gameId = game._id;
-        var players = game.players;
+        var players = game.players || [];
+        players.push(game.ownerId);
         var update = {
             ['gamesPlaying.'+gameId+'.name']: game.name,
             ['gamesPlaying.'+gameId+'.start']: game.start,
@@ -678,6 +682,20 @@ function propagateGameChange(id, callback){
             ['gamesPlaying.'+gameId+'.safeties']: game.safeties
         }
         function propagate(idx){
+            if(idx == players.length - 1){
+                var gameString = 'createdGames'+gameId;
+                var update = {
+                    [gameString+'.name']: game.name,
+                    [gameString+'.start']: game.start,
+                    [gameString+'.end']: game.end,
+                    [gameString+'.loc']: game.loc,
+                    [gameString+'.description']: game.description,
+                    [gameString+'.domain']: game.domain,
+                    [gameString+'.password']: game.password,
+                    [gameString+'.killInterval']: game.killInterval,
+                    [gameString+'.safeties']: game.safeties
+                }
+            }
             if(idx < players.length){
                 var player = players[idx];
                 put('/users', {filter: {_id: player}, setPair: update}, function(data){
@@ -700,7 +718,10 @@ function addSafeties(gameId, safeties){
             refreshNavCol();
             getUser(function(userRes){
                 closeMainModal();
-                populateGameInfo(userRes.gamesPlaying[gameId]);
+                if(gameId in userRes.createdGames)
+                    populateGameInfo(userRes.createdGames[gameId]);
+                else
+                    populateGameInfo(userRes.gamesPlaying[gameId]);
 
             });
         });
@@ -708,6 +729,10 @@ function addSafeties(gameId, safeties){
 
 }
     
+function decode(string){
+    var newLines = string.replace(/%0A/g, '<br>');
+    return newLines.replace(/%20/g, ' ');
+}
 
 /*---------Global intervals object for countdowns---------*/
 var interval = {
