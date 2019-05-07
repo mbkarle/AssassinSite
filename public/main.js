@@ -378,7 +378,7 @@ function populateGameInfo(game){
                 $('.location').html(game.location);
                 $('.owner').html(game.owner);
                 $('.startDate').html(game.start);
-                $('.description').html(decode(encodeURI(game.description)));
+                $('.description').html(((game.description).includes('%'))?decode(game.description):decode(encodeURI(game.description)));
                 $('.kills').html(game.kills);
 
                 if(!(game._id in user.gamesPlaying)){
