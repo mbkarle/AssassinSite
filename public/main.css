@@ -308,7 +308,7 @@ button:hover {
 #content-pane {
     flex: 1;
     background: #b9cdda;
-    height: 100%;
+    height: 90%;
     width: 50%;
     padding: 30px;
     overflow-y: scroll;
