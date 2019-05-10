@@ -1,6 +1,6 @@
 /*---------Generic Helper Functions---------*/
 function get(route, query,  callback){
-    query.current_user = firebase.auth().currentUser.uid;
+    query.current_user = query.current_user || firebase.auth().currentUser.uid;
     $.get(route, query, function(data){
        callback(data);
    }); 
@@ -175,8 +175,10 @@ function closeMainModal(){
 }
 
 /*---------Join Game---------*/
-function joinGame(id){
-    getUser(function(user){
+function joinGame(id, joining_id, callback){
+    var joining = joining_id || firebase.auth().currentUser.uid;
+    get('/users', {_id: joining, current_user: joining, desired:['gamesPlaying', '_id', 'createdGames']}, function(user){
+	user = user[0];
        var gameIndex = id; 
        put('/games', {filter: {strId: id}, op: '$push', key: 'players', value: user._id}, function(game){
            game = game.value;
@@ -188,7 +190,10 @@ function joinGame(id){
                delete game.players;
                put('/users', {id: user._id, key: 'gamesPlaying.'+gameIndex, value: game}, function(data){
                    console.log(data);
-                   refreshGamePage(game);
+		   if(callback)
+		       callback();
+		   else
+                       refreshGamePage(game);
                });
            }
            else{
@@ -313,9 +318,14 @@ function showSearchResults(search){
             var id = res._id;
             $('#content-pane').append('<div id="'+id+'" class="search-result">'+title+'<div class="search-items">'+sUser+sLoc+sDate+'</div></div><br>');
             $('.search-result').on('click', function(){
-                get('/games', {strId: $(this).attr('id'), omit: ['players']}, function(games){
+                get('/games', {strId: $(this).attr('id')}, function(games){
                     var game = games[0];
-                    populateContentPane('Searched-Game', game)
+		    getUser(function(user){
+			if(game._id in user.gamesPlaying)
+			    populateContentPane('Searched-Game', user.gamesPlaying[game._id]);
+		        else
+			    populateContentPane('Searched-Game', game);
+		    });
                 });
             });
         }

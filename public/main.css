@@ -354,7 +354,7 @@ button:hover {
 }
 
 .search-result:hover{
-    border: 1px solid rgb(33, 136, 255);
+    border: 3px solid rgb(33, 136, 255);
 }
 
 .search-title {
