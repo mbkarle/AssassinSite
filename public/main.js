@@ -260,6 +260,8 @@ function checkNotifications(){
             var notifications = [];
             for(var n of user.notifications)
                 notifications.push(new InternalNotification(n.title, n.message, n.buttons, n.data));
+            $('.close').hide();
+            $('.nextModal').show();
             openNotifications(notifications, 0);
         }
     });
@@ -279,6 +281,8 @@ function openNotifications(notifications, idx){
         });
     }
     else{
+        $('.close').show();
+        $('.nextModal').hide();
         $(document).off('click');
         closeMainModal();
     }
@@ -479,16 +483,25 @@ function populateGameInfo(game){
                     });
                     
                     //check if dead
-                    if(isAlive(game, user._id)){ 
-                        var deadline = new Date(game.killDeadline);
-                        interval.make(function(){
-                            $('.deadline').html("Time to kill target: <br>" + dateCountdown(deadline));
-                            console.log('changing countdown');
-                        }, 1000);
+                    if(isAlive(game, user._id)){ //TODO: fix deadline display
+                        get('/games', {strId: game._id, desired: ['roundEnd', 'round']}, function(data){
+                            if('roundEnd' in data[0]){
+                                var roundEnd = new Date(data[0]['roundEnd']);
+                                interval.make(function(){
+                                    $('.deadline').html("Round ends in: <br>" + dateCountdown(roundEnd));
+                                    console.log('changing countdown');
+                                }, 1000);
+                                $('.round').html(data[0]['round']);
+                            }
+                        });
+
                         $('.reportKill').on('click', function(){
                             reportPlayerKilled(game.target, game._id);
                             alert('A report has been sent. The target or moderator must confirm the kill before it is official.');
                         });
+
+                        if('roundEligible' in game)
+                            $('.roundEligible').html(game.roundEligible);
                     }
                     else{
                         $('.deadline').html("You've been killed!");
@@ -520,15 +533,21 @@ function startGame(id) {
                 var date = new Date();
                 date.setDate(date.getDate() + parseInt(game.killInterval, 10));
 
+                var gameString = 'gamesPlaying.'+gameID;
                 function putTarget(user, target, idx, max){//function to recursively add targets
-                    put('/users', {id: user, setPair:{['gamesPlaying.'+gameID+'.target']: target, ['gamesPlaying.'+gameID+'.hasStarted']: true, ['gamesPlaying.'+gameID+'.killDeadline']: date}}, function(res){
+                    put('/users', {
+                        filter:{_id: user},
+                        setPair:{
+                            ['gamesPlaying.'+gameID+'.target']: target,
+                            ['gamesPlaying.'+gameID+'.hasStarted']: true,
+                            [gameString+'.roundElegible']:1
+                        }
+                    }, function(res){
                         if(idx < max){
                             putTarget(target, targets[target], idx + 1, max);
                         }
                         else{
-                            put('/games', {filter: {strId:id}, key: 'hasStarted', value: true}, function(result){
-                                stopLoading(loader);
-                            });
+                            stopLoading(loader);
                         }
                     });
                 }
@@ -536,7 +555,12 @@ function startGame(id) {
                 var starter = Object.keys(targets)[0];
                 var target = targets[starter];
                 var max = Object.keys(targets).length - 1;
-                putTarget(starter, target, 0, max);
+                put('/games', {
+                    filter: {strId: gameID},
+                    setPair: {hasStarted: 'true', round:1, roundEnd: date}
+                }, function(data){
+                    putTarget(starter, target, 0, max);
+                });
             }
             else{
                 alert('Error: game has already started or you do not have permission to start game');
@@ -670,7 +694,9 @@ function vote(vote, gameId, userId, killer){
 
 function isAlive(game, userId){
     var isVoting = ('killVote' in game);
-    return !(isVoting && (game.killVote[game.ownerId] == 'true' || game.killVote[userId] == 'true'));
+    var votingAlive = !(isVoting && (game.killVote[game.ownerId] == 'true' || game.killVote[userId] == 'true'));
+    var isKilled = ('killed' in game && game.killed == 'true');
+    return (votingAlive && !isKilled);
 }
 
 function propagateGameChange(id, callback){

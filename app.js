@@ -36,7 +36,11 @@ client.connect(err => { //connect!
     if(err) throw err;
     
     routes(client.db("Assassin"), app);//integrate db with webpage
-  
-});
+ 
+    /*---------Start timer checks---------*/
+    const intervalFunc = require('./app/interval.js');
+    const interval = intervalFunc();//main interval
 
+    interval.startGames(client.db("Assassin"), interval); 
+});
 

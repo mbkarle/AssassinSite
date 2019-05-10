@@ -70,37 +70,40 @@ module.exports = function(db, app) {
                 if(killVote == 'true'){
                     db.collection('userlist').find({_id: body.killer}).toArray(function(err, user){
                         if(err)throw err;
-                        user = user[0];
-                        var game = user.gamesPlaying[body.gameId];
-                        console.log('Game: '+ JSON.stringify(game));
-                        if(!('usersKilled' in game && game.usersKilled.includes(body.filter._id))){//Kill is confirmed
-                            var curr_kills = game.kills || "0";
-                            var kills = parseInt(curr_kills) + 1;
-                            var totalKills = parseInt(user.totalKills) + 1;
-                            var toPut = {
-                                filter:{_id: user._id},
-                                setPair:{['gamesPlaying.'+body.gameId+'.usersKilled']: body.filter._id},
-                                op: '$push'
-                            };
-                            putFunc(db, 'userlist', toPut, function(response){
-                                var nextTarget = killedUser.gamesPlaying[game._id].target;
-                                var deadline = new Date();
-                                deadline.setDate(deadline.getDate() + 7);
-                                toPut.setPair = {
-                                    ['gamesPlaying.'+game._id+'.kills']:kills,
-                                    totalKills: totalKills,
-                                    ['gamesPlaying.'+game._id+'.target']:nextTarget,
-                                    ['gamesPlaying.'+game._id+'.killDeadline']:deadline
+                        db.collection('games').find({strId: body.gameId}).toArray(function(err, overallGame){
+                            user = user[0];
+                            var game = user.gamesPlaying[body.gameId];
+                            console.log('Game: '+ JSON.stringify(game));
+                            if(!('usersKilled' in game && game.usersKilled.includes(body.filter._id))){//Kill is confirmed
+                                var curr_kills = game.kills || "0";
+                                var kills = parseInt(curr_kills) + 1;
+                                var totalKills = parseInt(user.totalKills) + 1;
+                                var toPut = {
+                                    filter:{_id: user._id},
+                                    setPair:{['gamesPlaying.'+body.gameId+'.usersKilled']: body.filter._id},
+                                    op: '$push'
                                 };
-                                toPut.op = '$set';
-                                putFunc(db, 'userlist', toPut, function(nextRes){
-                                    res.json(nextRes);
+                                putFunc(db, 'userlist', toPut, function(response){
+                                    var nextTarget = killedUser.gamesPlaying[game._id].target;
+                                    //var deadline = new Date(); //immediate deadline reset on kill
+                                    //deadline.setDate(deadline.getDate() + 7);
+                                    toPut.setPair = {
+                                        ['gamesPlaying.'+game._id+'.kills']:kills,
+                                        totalKills: totalKills,
+                                        ['gamesPlaying.'+game._id+'.target']:nextTarget,
+                                        ['gamesPlaying.'+game._id+'.roundEligible']: ('round' in overallGame)?parseInt(overallGame.round)+1:2
+                                        //['gamesPlaying.'+game._id+'.killDeadline']:deadline
+                                    };
+                                    toPut.op = '$set';
+                                    putFunc(db, 'userlist', toPut, function(nextRes){
+                                        res.json(nextRes);
+                                    });
                                 });
-                            });
-                        }
-                        else{
-                            res.json(data);
-                        }
+                            }
+                            else{
+                                res.json(data);
+                            }
+                        });
                     });
                 }
                 else{
