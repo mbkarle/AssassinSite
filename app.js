@@ -31,16 +31,17 @@ const uri = env.uri;//get connection uri from environment
 const client = new MongoClient(uri, { useNewUrlParser: true }); //create new client object
 
 const routes = require("./app/routes.js");//get routes function
+const gameCollection = env.gameCollection || 'testGames';//default to testGames to avoid messing with actual site
 
 client.connect(err => { //connect!
     if(err) throw err;
     
-    routes(client.db("Assassin"), app);//integrate db with webpage
+    routes(client.db("Assassin"), app, gameCollection);//integrate db with webpage
  
     /*---------Start timer checks---------*/
     const intervalFunc = require('./app/interval.js');
     const interval = intervalFunc();//main interval
 
-    interval.startGames(client.db("Assassin"), interval); 
+    interval.startGames(client.db("Assassin"), interval, gameCollection); 
 });
 

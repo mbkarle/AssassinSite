@@ -262,21 +262,22 @@ function checkNotifications(){
                 notifications.push(new InternalNotification(n.title, n.message, n.buttons, n.data));
             $('.close').hide();
             $('.nextModal').show();
-            openNotifications(notifications, 0);
+            openNotifications(notifications, 0, 0);
         }
     });
 }
 
-function openNotifications(notifications, idx){
+function openNotifications(notifications, idx, dismissed){
     if(idx < notifications.length){
         openNewModal(notifications[idx].modal_items);
-        $(document).off('click').on('click', function(){
-            openNotifications(notifications, idx + 1);
+        $('.close, .nextModal').off('click').on('click', function(){
+            openNotifications(notifications, idx + 1, dismissed);
         });
         $('.modal-button').off('click').on('click', function(){
             notificationButtons[$(this).text()]($(this).attr('data-info'));
-            dismissNotification(idx, function(data){
+            dismissNotification(idx - dismissed, function(data){
                 console.log(data);
+                openNotifications(notifications, idx + 1, dismissed + 1);
             })
         });
     }
@@ -531,7 +532,8 @@ function startGame(id) {
                 targets = match(playIds);
 
                 var date = new Date();
-                date.setDate(date.getDate() + parseInt(game.killInterval, 10));
+                //date.setDate(date.getDate() + parseInt(game.killInterval, 10)); //days - default
+                date.setMinutes(date.getMinutes() + parseInt(game.killInterval)); //minutes - testing only
 
                 var gameString = 'gamesPlaying.'+gameID;
                 function putTarget(user, target, idx, max){//function to recursively add targets
@@ -630,7 +632,7 @@ function dateCountdown(deadline){
     var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    return (distance > 0)?(days + " days " + hours + " hrs " + minutes + " min " + seconds + " sec "):"Deadline Passed!"
+    return (distance > 0)?(days + " days " + hours + " hrs " + minutes + " min " + seconds + " sec "):"Round ended. Try refreshing in a bit."
 }
 
 /*---------Report player killed---------*/
@@ -665,6 +667,7 @@ function sendNotification(recipient, notification, callback){
         callback(response);
     });
 }
+
 
 function dismissNotification(idx, callback){
     getUser(function(user){

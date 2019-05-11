@@ -24,11 +24,11 @@ module.exports = function(){
         },
 
         // feed all game deadlines into master loop
-        startGames(db, subInterval) {
-            var minutes = 5;
+        startGames(db, subInterval, gameCollection) {
+            var minutes = 2;
             this.make(function(){//make master interval
-                console.log('querying all games')
-                db.collection('games').find({hasStarted: 'true'}).toArray(function(err, res){
+                console.log('queried all games at ' + new Date());
+                db.collection(gameCollection).find({hasStarted: 'true'}).toArray(function(err, res){
                     if(err) throw err;
                     for(var game of res){
                         if('roundEnd' in game){//should have a round end but check anyways
@@ -37,22 +37,23 @@ module.exports = function(){
                           var diff = getDiff(new Date(), roundEnd);
                           console.log('diff: ' + diff);
 
-                          if(diff <= minutes && diff > 0){
+                          if(diff <= minutes){
                                //make faster updating interval
-                               console.log('making faster interval');
+                               console.log('making faster interval, game.strId: '+ game.strId);
                                var id = subInterval.make(function(){
                                     var nextDiff = getDiff(new Date(), roundEnd);
                                     if(nextDiff < 0){ //end round
                                         //end function
-                                        endRound(db, game._id);
+                                        console.log('call endRound, id:'+game._id);
+                                        endRound(db, game._id, gameCollection);
                                         subInterval.clear(id);//get rid of mini interval
                                     }
                                }, 1000 * 60);
                           }
-                          else if(diff < 0){//unlikely scenario in which it misses subinterval start
+                          /*else if(diff < 0){//unlikely scenario in which it misses subinterval start
                                 //end function
                                 endRound(db, game._id);
-                          }
+                          }*/
                         }
                     }
 
@@ -71,16 +72,17 @@ function getDiff(date1, date2){
     return Math.ceil((date2.getTime()-date1.getTime())/(1000*60));
 }
 
-function endRound(db, game_id){
+function endRound(db, game_id, gameCollection){
     game_id = ''+game_id; //make sure it's a string
-    var collection = db.collection('games');
+    var collection = db.collection(gameCollection);
     console.log('ending round for ' + game_id + " with collection: " + collection);
-    db.collection('games').findOne({'strId': game_id}, function(err, res){//find the game
+    db.collection(gameCollection).findOne({'strId': game_id}, function(err, res){//find the game
         if(err) throw err;
         var game = res;
-        console.log('game ending: ' + res);
+        console.log('Full game: ' + JSON.stringify(game));
         var players = game.players;
-        var round = parseInt(game.round) + 1 || 2;
+        var round = parseInt(""+game.round, 10) + 1 || 2;
+        console.log('GameID: ' + game._id + '; game.round: ' + game.round + '; parsed next round: ' + round);
         var roundEnd = new Date();
         roundEnd.setDate(roundEnd.getDate() + parseInt(game.killInterval));
 
@@ -108,7 +110,7 @@ function endRound(db, game_id){
                     });
                 }
                 else{//exit function: now that all players have been killed by round, sort out new targets
-                    sortTargets(db.collection('userlist'), game_id, player_id, player_id, 0);
+                    sortTargets(db.collection('userlist'), game_id, players, 0, 0,{});
                 }
             }
             updatePlayers(0);//start the recursion
@@ -117,35 +119,85 @@ function endRound(db, game_id){
     });
 }
 
-function sortTargets(collection, game_id, player_id, starter_id, count){
-    if(count > 0 && player_id != starter_id){//check if it's come full circle
-        collection.findOne({_id: player_id}, function(err, res){//find first living player
-            if(err) throw err;
-            var player = res;
-            var game = res['gamesPlaying'][game_id];
-            if('killed' in game && game.killed == 'true'){//if they're dead, check if target lives
-                sortTargets(collection, game_id, game.target, starter_id, count+1);
-            }
-            else {//if alive, find their next living target
-                var target_id = game.target;
-                function getLiving(target_id){
-                    collection.findOne({_id: target_id}, function(err, target){//find target
-                        if(err) throw err;
-                        var targetGame = target['gamesPlaying'][game_id];
-                        if('killed' in targetGame && targetGame.killed == 'true')//if target is dead, get check if their target lives
-                            getLiving(targetGame.target);
-                        else{//if target lives, make it the player's target
-                            collection.updateOne({_id: player._id}, {
-                                $set: {['gamesPlaying.'+game_id+'.target']: target}
-                            }, function(err, data){//get next living player in the loop
-                                sortTargets(collection, game_id, target._id, starter_id, count+1);
-                            });
+/*---------Sort Targets after round end---------*/
+/*
+ * Assume all players not eligible have been killed by round end
+ * Take in collection, game id, players array, index to start
+ * Calls itself to synchronize database requests
+ * @params count and tracker solely for debugging/logging purposes
+ */
+function sortTargets(collection, game_id, players, idx, count, tracker){
+    
 
+    if(idx < players.length){//check index to keep within array
+        var player = ''+players[idx]; //get player at index, add to string to guarantee type
+        var gameString = 'gamesPlaying.'+game_id; //store game property name
+        
+        collection.findOne({_id:player}, {[gameString]:1}, function(err, res){//get player game
+            if(err) throw err;
+            var game = res['gamesPlaying'][game_id];
+            if(isAlive(game)){//if player is alive
+                count++; 
+                /*
+                 * recursive function to find next living target
+                 */
+                function getTarget(game){
+                    collection.findOne({_id: ""+game.target}, {[gameString]:1}, function(err, r){
+                        if(err) throw err;
+                        var targetGame = r['gamesPlaying'][game_id];
+                        if(isAlive(targetGame)){//if target lives, assign to player
+                            var update = {$set: {[gameString+'.target']:r['_id']}};
+                            //put target_id as player's target in db
+                            collection.updateOne({_id: player}, update, function(err, result){
+                                if(err) throw err;
+                                tracker[player] = r['_id']; //add to tracker object
+                                sortTargets(collection, game_id, players, idx+1, count, tracker);//move on to next player
+                            });
+                        }
+                        else {// if target is dead, check their target
+                            getTarget(targetGame);
                         }
                     });
                 }
-                getLiving(target_id);
+                
+                //call to assign target to player and begin recursion
+                getTarget(game);
+
             }
+
+            else { //if player is dead
+                sortTargets(collection, game_id, players, idx+1, count, tracker);//move on to next player
+            }
+
         });
     }
-};
+
+    else{//exit recursion once all is done
+        console.log('/*---------Targets Sorted---------*/');
+        console.log(count + ' players remaining');
+        var start = Object.keys(tracker)[0];
+        var assassin = start;
+        do {
+            var target = tracker[assassin];
+            console.log(assassin + " has " + target);
+            assassin = target;
+        }while(assassin != start);
+        console.log('/*---------Targets Sorted---------*/');
+        
+    }
+}
+
+function isAlive(game){
+    var killed = ('killed' in game && game.killed == 'true');
+    var votedKilled = false;
+    if('killVote' in game){
+        for(var voter in game.killVote){
+            if(game.killVote[voter] == 'true'){
+                votedKilled = true;
+                break;
+            }
+        }
+    }
+    return !(killed || votedKilled);
+}
+

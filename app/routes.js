@@ -1,16 +1,16 @@
-module.exports = function(db, app) {
+module.exports = function(db, app, gameCollection) {
 
     app.route('/games')
         .get(function(req, res){
-            getFunc(db, 'games', req.query, function(result){
+            getFunc(db, gameCollection, req.query, function(result){
                 res.json(result);
             });
         })
         .post(function(req, res){
             var toInsert = req.body;
-            db.collection('games').insertOne(toInsert, function(err, result){
+            db.collection(gameCollection).insertOne(toInsert, function(err, result){
                 if(err) throw err;
-                db.collection('games').updateOne({_id: toInsert._id}, {$set: {strId: toInsert._id.toString()}}, function(err, resp){
+                db.collection(gameCollection).updateOne({_id: toInsert._id}, {$set: {strId: toInsert._id.toString()}}, function(err, resp){
                     if(err) throw err;
                     console.log("ID: " + toInsert._id);
                     var response = {result: result, _id: toInsert._id};
@@ -20,7 +20,7 @@ module.exports = function(db, app) {
         })
         .put(function(req, res){
             console.log('Games Request: ' + JSON.stringify(req.body));
-            putFunc(db, 'games', req.body, function(result){
+            putFunc(db, gameCollection, req.body, function(result){
                 console.log("Games Result: " + JSON.stringify(result));
                 res.json(result);
             });
@@ -70,7 +70,7 @@ module.exports = function(db, app) {
                 if(killVote == 'true'){
                     db.collection('userlist').find({_id: body.killer}).toArray(function(err, user){
                         if(err)throw err;
-                        db.collection('games').find({strId: body.gameId}).toArray(function(err, overallGame){
+                        db.collection(gameCollection).find({strId: body.gameId}).toArray(function(err, overallGame){
                             user = user[0];
                             var game = user.gamesPlaying[body.gameId];
                             console.log('Game: '+ JSON.stringify(game));
@@ -96,7 +96,9 @@ module.exports = function(db, app) {
                                     };
                                     toPut.op = '$set';
                                     putFunc(db, 'userlist', toPut, function(nextRes){
-                                        res.json(nextRes);
+                                        putFunc(db, 'userlist', {['gamesPlaying.'+game._id+'.killed']: 'true'}, function(){
+                                            res.json(nextRes);
+                                        });
                                     });
                                 });
                             }
